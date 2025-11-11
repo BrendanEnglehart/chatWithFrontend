@@ -1,15 +1,51 @@
 <!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
+<link rel="icon" type="image/png" href="../static/favicon.png" sizes="16x16">
+<link rel="stylesheet"  href="../static/css/style.css">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rebuilding</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Document</title>
 </head>
+
 <body>
-    <h1>Under Reconstruction!</h1>
-    <p>If you've landed here, I'm rebuilding this website</p>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <div id="login">
+        Username: <input id="Username"></br>
+        <div id="Email Box" hidden>Email: <input id="Email"> </br></div>
+        Password: <input id="Password" type="password"></br>
+        <div id="Confirm Field" hidden>Confirm Password: <input id="Confirm Password" type="password"> </br></div>
+        <div id="Error" hidden>Login Error</div>
+        <button id="LoginButton">Login</button>
+        <button id="Create">Create</button>
+        <button id="ConfirmCreate" hidden>Create</button>
+    </div>
+    <div id="mainBody" hidden="True">
+        <table>
+            <td>
+                <div id="left" class="left">
+                    <div id="Topics">
+                        <h1>Topics</h1>
+                        <div id="Topic-List"></div>
+                    </div>
+                    <div id="Categories">
+                        <h1>Categories</h1>
+                        <div id="Category-List"></div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div id="middle" class="middle">
+                    <div id="chatChannel" class="chat"></div>
+                    <div id="chatFeed" class="chat"></div>
+                    <div id="newMessageArea"><textarea id="newMessage"></textarea>
+                        <button id="sendMessage">Send</button>
+                    </div>
+                </div>
+            </td>
+        </table>
+    </div>
+    <script src="../static/javascript/renderer.js"></script>
 </body>
+
 </html>
