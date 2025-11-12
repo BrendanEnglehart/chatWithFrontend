@@ -51,7 +51,7 @@ def sendMessage():
     pprint(text)
     pprint(session.get('user'))
     ret = external_requests.post(api_endpoint+"/message/" + topic, 
-                                  json={"username":session.get('user')['userinfo']['given_name'], "session":"id", "topic": topic, "text":text})
+                                  json={"username":session.get('user')['userinfo']['nickname'], "session":"id", "topic": topic, "text":text})
     if ret.ok:
         print ("ok")
     else:
