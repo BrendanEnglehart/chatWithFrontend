@@ -10,6 +10,9 @@
     # Copy the Flask application code
     COPY . . 
 
+        # Copy the Flask application code
+    COPY .env . 
+
     # Copy requirements.txt and install dependencies
     RUN pip install -r requirements.txt
 

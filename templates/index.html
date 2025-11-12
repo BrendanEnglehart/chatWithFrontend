@@ -10,17 +10,8 @@
 </head>
 
 <body>
-    <div id="login">
-        Username: <input id="Username"></br>
-        <div id="Email Box" hidden>Email: <input id="Email"> </br></div>
-        Password: <input id="Password" type="password"></br>
-        <div id="Confirm Field" hidden>Confirm Password: <input id="Confirm Password" type="password"> </br></div>
-        <div id="Error" hidden>Login Error</div>
-        <button id="LoginButton">Login</button>
-        <button id="Create">Create</button>
-        <button id="ConfirmCreate" hidden>Create</button>
-    </div>
-    <div id="mainBody" hidden="True">
+    {% if session %}
+    <div id="mainBody">
         <table>
             <td>
                 <div id="left" class="left">
@@ -45,7 +36,13 @@
             </td>
         </table>
     </div>
-    <script src="../static/javascript/renderer.js"></script>
+    <div>
+        <button id="logout"><a href="/logout">Logout</a></button>
+    </div>
+    {% else %}
+        <h1>Welcome Guest</h1>
+        <p><a href="/login">Login</a></p>
+    {% endif %}
+     <script src="../static/javascript/renderer.js"></script>
 </body>
-
 </html>
