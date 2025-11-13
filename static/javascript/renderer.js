@@ -55,7 +55,7 @@ async function switchTopic() {
                         chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                     }
                 }
-                latest=messages[messages.length-1].time
+
         }
         })
         // await fetch( "/category/category/").then(response=>response.json())
@@ -94,30 +94,24 @@ async function switchTopic() {
 async function streamTopic() {
         // I'm not putting too much effort into the api requests now because they need to be moved from the renderer to the app.py area
         if (!mainTab.hidden){
-            if (latest != 0){
-
-        response = await fetch( "/stream").then(response=>response.json())
-        .then(data => {
-            messages = data.messages
-            if (messages && messages.length > 0) {
-                latest=messages[messages.length-1].time
-                if (messages.length > 0) {
-                    for (i in messages) {
-                        if ('picture' in messages[i]){
-                            picture = messages[i].picture
+            response = await fetch( "/stream").then(response=>response.json())
+            .then(data => {
+                messages = data.messages
+                if (messages && messages.length > 0) {
+                    latest=messages[messages.length-1].time
+                    if (messages.length > 0) {
+                        for (i in messages) {
+                            if ('picture' in messages[i]){
+                                picture = messages[i].picture
+                            }
+                            else{
+                                picture = default_image
+                            }
+                            chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                         }
-                        else{
-                            picture = default_image
-                        }
-                        chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
-                    }
-                }          
-            }
-            })
-        }
-        else {
-            switchTopic()
-        }
+                    }          
+                }
+                })
     }
 
 }

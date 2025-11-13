@@ -8,29 +8,21 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
 import json
 from flask import Flask, redirect, render_template, session, url_for
-
+import copy
 from pprint import pprint
-
+DEVELOPMENT_MODE=False
 ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
-"""
-session('user)
-dict_keys(['access_token', 'expires_at', 'expires_in', 'id_token', 'scope', 'token_type', 'userinfo'])
-session('user).userinfo
-dict_keys(['aud', 'email', 'email_verified', 'exp', 'family_name', 'given_name', 'iat', 'iss', 'name', 'nickname', 'nonce', 'picture', 'sid', 'sub', 'updated_at'])
-"""
-
-
-
-app.secret_key = env.get("APP_SECRET_KEY")
 oauth = OAuth(app)
-topic = "general"
-category = "general"
-oauth.register(
+
+api_endpoint="http://127.0.0.1:5001"
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+    app.secret_key = env.get("APP_SECRET_KEY")
+    api_endpoint=env.get("API_ENDPOINT")
+    oauth.register(
     "auth0",
     client_id=env.get("AUTH0_CLIENT_ID"),
     client_secret=env.get("AUTH0_CLIENT_SECRET"),
@@ -39,17 +31,38 @@ oauth.register(
     },
     server_metadata_url=f'https://{env.get("AUTH0_DOMAIN")}/.well-known/openid-configuration'
 )
+else:
+    DEVELOPMENT_MODE=True
 
-# Prod API endpoint
-api_endpoint=env.get("API_ENDPOINT")
-# api_endpoint="http://127.0.0.1:5001"
 
+"""
+#TODO
+Mock Users should at least have these values
+session('user)
+dict_keys(['access_token', 'expires_at', 'expires_in', 'id_token', 'scope', 'token_type', 'userinfo'])
+session('user).userinfo
+dict_keys(['email', 'email_verified','nickname', 'picture', 'updated_at'])
+"""
+topic = "general"
+category = "general"
+
+dev_mode_chat_stack=[]
+
+
+# Prod API endpoint # 
 
 @app.route('/sendMessage',methods = ['POST'])
 def sendMessage():
     text = request.get_json()['text']
+    if DEVELOPMENT_MODE:
+        dev_mode_chat_stack.append({"username":"test",
+                                    "picture":"https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&amp;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
+                                    "topic": topic,
+                                    "text":text})
+        return {}
 
     pprint(session.get('user'))
+
     ret = external_requests.post(api_endpoint+"/message/" + topic, 
                                   json={"username":session.get('user')['userinfo']['nickname'], "picture":session.get('user')['userinfo']['picture'], "topic": topic, "text":text})
     if ret.ok:
@@ -62,6 +75,12 @@ def sendMessage():
 def stream():
     ## I think topic should be part of session, so every time we switch topic we just set session->topic_id to blah and call stream
     text = request.cookies.get('topic')
+    if DEVELOPMENT_MODE:
+        global dev_mode_chat_stack
+        ret = copy.deepcopy(dev_mode_chat_stack)
+        dev_mode_chat_stack = []
+        return {"messages":ret}
+
     if text==None:
         text = "general"
     time = session.get('stream_latest')
@@ -82,8 +101,11 @@ def stream():
 
 @app.route("/")
 def home():
-    session['stream_latest'] = datetime.datetime.min
-    return render_template("index.html", session=session.get('user'), pretty=json.dumps(session.get('user'), indent=4)) 
+    if not DEVELOPMENT_MODE:
+        session['stream_latest'] = datetime.datetime.min
+        return render_template("index.html", session=session.get('user'), pretty=json.dumps(session.get('user'), indent=4)) 
+    else:
+        return render_template("index.html", session=DEVELOPMENT_MODE) 
 
 
 @app.route("/login")
@@ -116,8 +138,6 @@ def logout():
 
 
 if __name__ == '__main__':
-    # If we are running in Dev
-    api_endpoint="http://127.0.0.1:5001"
     app.run(debug=True)   
 else:
     gunicorn = app
