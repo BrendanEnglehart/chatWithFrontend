@@ -1,12 +1,5 @@
 const divUsers = document.getElementById("users")
 document.addEventListener('DOMContentLoaded', async () => {
-    // users = window.users;
-    // console.log(users)
-    // const luas = await users.getUsers()
-    // console.log(luas)
-    // console.log(divUsers.innerHtml )
-    // divUsers.textContent = luas
-    // console.log(divUsers.innerHtml )
 
 })
 console.log("loaded render")
@@ -17,6 +10,17 @@ const topic = "general"
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
 
+// We are all brendan on this blessed day
+const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
+
+
+// This won't persist, but I'm using it right now as a crutch
+function chatHTML(username, image, text){
+        return "<div class='grid grid-cols-2'>\
+          <div><img src='"+image+"' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
+          <div class='grid grid-cols-1'><strong>"+username+"</strong> <span>"+text+"</span></div>\
+        </div></br>";
+}
 
 // if (cookie != null && cookie != "")
 // {
@@ -42,7 +46,13 @@ async function switchTopic() {
             if (messages) {
                 if (messages.length > 0) {
                     for (i in messages) {
-                        chatFeed.innerHTML += "<div>" + messages[i].username + ":" + messages[i].text + "</div>"
+                        if ('picture' in messages[i]){
+                            picture = messages[i].picture
+                        }
+                        else{
+                            picture = default_image
+                        }
+                        chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                     }
                 }
                 latest=messages[messages.length-1].time
@@ -93,7 +103,13 @@ async function streamTopic() {
                 latest=messages[messages.length-1].time
                 if (messages.length > 0) {
                     for (i in messages) {
-                        chatFeed.innerHTML += "<div>" + messages[i].username + ":" + messages[i].text + "</div>"
+                        if ('picture' in messages[i]){
+                            picture = messages[i].picture
+                        }
+                        else{
+                            picture = default_image
+                        }
+                        chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                     }
                 }          
             }

@@ -43,15 +43,15 @@ oauth.register(
 # Prod API endpoint
 api_endpoint=env.get("API_ENDPOINT")
 # api_endpoint="http://127.0.0.1:5001"
-print(api_endpoint)
+
 
 @app.route('/sendMessage',methods = ['POST'])
 def sendMessage():
     text = request.get_json()['text']
-    pprint(text)
+
     pprint(session.get('user'))
     ret = external_requests.post(api_endpoint+"/message/" + topic, 
-                                  json={"username":session.get('user')['userinfo']['nickname'], "session":"id", "topic": topic, "text":text})
+                                  json={"username":session.get('user')['userinfo']['nickname'], "picture":session.get('user')['userinfo']['picture'], "topic": topic, "text":text})
     if ret.ok:
         print ("ok")
     else:

@@ -1,6 +1,1 @@
-body {
-    font-family: sans-serif;
-    background-color: #4f4284;
-    text-align: left;
-    padding-top: 50px;
-}
+@import "../javascript/node_modules/tailwindcss/";

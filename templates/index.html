@@ -2,47 +2,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <link rel="icon" type="image/png" href="../static/favicon.png" sizes="16x16">
-<link rel="stylesheet"  href="../static/css/style.css">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="../static/css/output.css">
 </head>
 
-<body>
+<body style="height: 60%;" class="w-full h-full flex text-gray-900 dark:text-white bg-white dark:bg-gray-900">
+    <div class="rounded-xl bg-white p-10 text-sm/7 text-gray-700 dark:bg-gray-900 dark:text-cyan-500">
     {% if session %}
     <div id="mainBody">
-        <table>
-            <td>
-                <div id="left" class="left">
-                    <div id="Topics">
-                        <h1>Topics</h1>
-                        <div id="Topic-List"></div>
-                    </div>
-                    <div id="Categories">
-                        <h1>Categories</h1>
-                        <div id="Category-List"></div>
-                    </div>
+        <div class="grid grid-cols-3">
+            <div id="left" class="grid h-full">
+                <div id="Topics">
+                    <h1>Topics</h1>
+                    <div id="Topic-List"></div>
                 </div>
-            </td>
-            <td>
-                <div id="middle" class="middle">
-                    <div id="chatChannel" class="chat"></div>
-                    <div id="chatFeed" class="chat"></div>
-                    <div id="newMessageArea"><textarea id="newMessage"></textarea>
-                        <button id="sendMessage">Send</button>
-                    </div>
+                <div id="Categories">
+                    <h1>Categories</h1>
+                    <div id="Category-List"></div>
                 </div>
-            </td>
-        </table>
-    </div>
-    <div>
-        <button id="logout"><a href="/logout">Logout</a></button>
-    </div>
-    {% else %}
+                <div>
+                    <button id="logout"><a href="/logout">Logout</a></button>
+                </div>
+            </div>
+            <div id="middle" class="middle" class="">
+                <div id="chatChannel" class="chat"></div>
+                <div id="chatFeed" style="height:500px; overflow-y:scroll" class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
+                </div>
+                <div id="newMessageArea">
+                    <textarea id="newMessage"></textarea>
+                    <button id="sendMessage">Send</button>
+                </div>
+            </div>
+  
+        </div>
+       
+        {% else %}
         <h1>Welcome Guest</h1>
         <p><a href="/login">Login</a></p>
-    {% endif %}
-     <script src="../static/javascript/renderer.js"></script>
+        {% endif %}
+         </div>
+        <script src="../static/javascript/renderer.js"></script>
 </body>
+
 </html>
