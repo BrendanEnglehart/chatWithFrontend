@@ -9,16 +9,17 @@ let latest = 0
 const topic = "general"
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
-
+let category_cache = []
+let topic_cache=[]
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
 
 
 // This won't persist, but I'm using it right now as a crutch
-function chatHTML(username, image, text){
-        return "<div class='grid grid-cols-2'>\
-          <div><img src='"+image+"' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
-          <div class='grid grid-cols-1'><strong>"+username+"</strong> <span>"+text+"</span></div>\
+function chatHTML(username, image, text) {
+    return "<div class='grid grid-cols-2'>\
+          <div><img src='"+ image + "' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
+          <div class='grid grid-cols-1'><strong>"+ username + "</strong> <span>" + text + "</span></div>\
         </div></br>";
 }
 
@@ -30,7 +31,7 @@ function chatHTML(username, image, text){
 //                 loginTab.hidden = "hey"
 //                 mainTab.hidden = undefined
 //         }
-        
+
 //     } catch (error) {
 //     // The cookie read failed    
 //     }
@@ -40,78 +41,149 @@ function chatHTML(username, image, text){
 
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic() {
-        await fetch( "/stream").then(response=>response.json())
+    await fetch("/stream").then(response => response.json())
         .then(data => {
             messages = data.messages
+            chatFeed.innerHTML = ""
             if (messages) {
                 if (messages.length > 0) {
                     for (i in messages) {
-                        if ('picture' in messages[i]){
+                        if ('picture' in messages[i]) {
                             picture = messages[i].picture
                         }
-                        else{
+                        else {
                             picture = default_image
                         }
                         chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                     }
                 }
 
-        }
+            }
         })
-        // await fetch( "/category/category/").then(response=>response.json())
-        // .then(data => {
-        //     categories = data.categories
-        //     if (categories) {
-        //         if (categories.length > 0) {
-        //             for (i in categories) {
-        //                 categoryList.innerHTML = "<div>" + categories[i].name
-        //                 if (category_id == undefined && categories[i].name == "general")
-        //                 {
-        //                     category_id = categories[i]._id
-        //                     fetch( "/topic/"+category_id).then(response=>response.json())
-        //                     .then(data => {
-        //                         topics = data.topics
-        //                         if (topics) {
-        //                             if (topics.length > 0) {
-        //                                 for (i in topics) {
-        //                                     topicList.innerHTML += "<div>" + topics[i].name + "</div>"
-        //                                 }
-        //                             }
-        //                             latest=messages[messages.length-1].time
-        //                     }
-        //                     })
 
-        //                 }
-        //             }
-        //         }
-        //         latest=messages[messages.length-1].time
-        // }
-        // })
+}
+async function switchCategory(event) {
+    console.log(event.target.name)
+    let category_id = event.target.name
+    fetch("/switch_category", {
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: JSON.stringify({ category_id: category_id })
+    })
+        .then(response => {
+            if (!response.ok) {
 
+            }
+        })
+        .then(data => {
+            loadTopics()
+            return response
+        })
+        .catch(error => {
+        });
+}
+async function switchTopics(event) {
+    console.log(event.target.name)
+    let topic = event.target.name
+    fetch("/switch_topic", {
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: topic.replaceAll("'",'"')
+    })
+        .then(response => {
+   
+            if (!response.ok) {
+
+            }
+        })
+        .then(data => {
+            switchTopic()
+            return response
+        })
+        .catch(error => {
+        });
+}
+async function loadTopics() {
+    await fetch("/topic").then(response => response.json())
+        .then(data => {
+            let topics = data.topics
+            
+            topicList.innerHTML = ""
+            if (topics && topic_cache != topics) {
+                topic_cache =topics
+                if (topics.length > 0) {
+                    for (i in topics) {
+                    let newTopic = document.createElement("div")
+                    let newButton = document.createElement("button")
+                    newButton.name = JSON.stringify(topics[i]).replaceAll('"',"'")
+                    newButton.textContent = topics[i].name
+                    newButton.onclick = switchTopics
+                    newTopic.append(newButton)
+                    topicList.append(newTopic)
+                    }
+                }
+            }
+        })
+}
+async function loadCategory() {
+
+    await fetch("/category").then(response => response.json())
+        .then(data => {
+            categories = data.categories
+            if (categories) {
+                if (categories.length > 0 && category_cache != categories) {
+                    category_cache = categories
+                    // it's going to look real annoying at first, I need to dynamically load these better
+                    categoryList.innerHTML = ""
+                    for (i in categories) {
+                        let newCategory = document.createElement("div")
+                        let newButton = document.createElement("button")
+                        newButton.name = categories[i]._id
+                        newButton.textContent = categories[i].name
+                        console.log(categories[i]._id)
+                        category_id = categories[i]._id
+                        newButton.onclick = switchCategory
+                        newCategory.append(newButton)
+                        categoryList.append(newCategory)
+                    }
+
+                }
+            }
+
+        })
+    loadTopics()
 }
 
 // We'll need to come back to this one TODO
 async function streamTopic() {
-        // I'm not putting too much effort into the api requests now because they need to be moved from the renderer to the app.py area
-        if (!mainTab.hidden){
-            response = await fetch( "/stream").then(response=>response.json())
+    // I'm not putting too much effort into the api requests now because they need to be moved from the renderer to the app.py area
+    if (!mainTab.hidden) {
+        response = await fetch("/stream").then(response => response.json())
             .then(data => {
                 messages = data.messages
                 if (messages && messages.length > 0) {
-                    latest=messages[messages.length-1].time
+                    latest = messages[messages.length - 1].time
                     if (messages.length > 0) {
                         for (i in messages) {
-                            if ('picture' in messages[i]){
+                            if ('picture' in messages[i]) {
                                 picture = messages[i].picture
                             }
-                            else{
+                            else {
                                 picture = default_image
                             }
                             chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                         }
-                    }          
+                    }
                 }
-                })
+                loadCategory()
+            })
+
     }
 
 }
@@ -119,15 +191,16 @@ const sendMessage = document.getElementById('sendMessage')
 const messageText = document.getElementById('newMessage')
 sendMessage.addEventListener('click', async () => {
     fetch("/sendMessage", {
-            method: 'POST', // Specify the method as POST
-            headers: {
-                'Content-Type': 'application/json', // Indicate that the body is JSON
-                'Accept': 'application/json', // Specify the expected response type
-            },
-            body: JSON.stringify({text: messageText.value})}) 
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: JSON.stringify({ text: messageText.value })
+    })
         .then(response => {
             if (!response.ok) {
-        
+
             }
         })
         .then(data => {
@@ -136,6 +209,58 @@ sendMessage.addEventListener('click', async () => {
         })
         .catch(error => {
         });
+})
+
+const addTopicButton = document.getElementById('addTopic')
+const newTopicSubmit = document.getElementById('newTopicSubmit')
+const newTopicName = document.getElementById('newTopicName')
+const newTopicType = document.getElementById('newTopicType')
+addTopicButton.onclick = function(){
+    document.getElementById('newTopicForm').hidden = undefined
+}
+
+newTopicSubmit.addEventListener('click', async () => {
+    let name = newTopicName.value
+    let type = newTopicType.value
+    newTopicName.value=""
+    response = await fetch("/new_topic", {
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: JSON.stringify({ name:name, topic_type:type })
+    }).then(response => response.json())
+            .then(data => {
+                loadTopics()
+            }
+        )
+})
+
+
+const addCategoryButton = document.getElementById('addCategory')
+const newCategorySubmit = document.getElementById('newCategorySubmit')
+const newCategoryName = document.getElementById('newCategoryName')
+addCategoryButton.onclick = function(){
+    document.getElementById('newCategoryForm').hidden = undefined
+}
+
+newCategorySubmit.addEventListener('click', async () => {
+    let name = newCategoryName.value
+    document.getElementById('newCategoryForm').hidden = "yes"
+    response = await fetch("/new_category", {
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: JSON.stringify({ name:name })
+    }).then(response => response.json())
+            .then(data => {
+                newCategoryName.value=""
+                loadCategory()
+            }
+        )
 })
 
 
@@ -148,5 +273,5 @@ var poll = (promiseFn, duration) => promiseFn().then(
 // Greet the World every second
 /// let refresh = 1000
 let refresh = 100000000
-poll(() => new Promise(() => streamTopic() ), refresh)
+poll(() => new Promise(() => streamTopic()), refresh)
 

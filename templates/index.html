@@ -15,13 +15,24 @@
     {% if (session) %}
     <div id="mainBody">
         <div class="grid grid-cols-3">
-            <div id="left" class="grid h-full">
-                <div id="Topics">
-                    <h1>Topics</h1>
+            <div id="left" class="grid h-full w-15">
+                <div style="height:250px; overflow-y:auto" id="Topics">
+                    <h1>Topics <button id="addTopic">+</button></h1>
+                    <div id="newTopicForm" hidden>
+                        <label for="newTopicName">Topic Name:</label><input id="newTopicName" type="text" class="bg-red-50">
+                        <label for="newTopicType">Topic Type: </label><select id="newTopicType"> 
+                            <option value="chat">Chat</option>
+                        </select>
+                        <button id="newTopicSubmit">Submit</button>
+                    </div>
                     <div id="Topic-List"></div>
                 </div>
-                <div id="Categories">
-                    <h1>Categories</h1>
+                <div style="height:250px; overflow-y:auto" id="Categories">
+                    <h1>Categories <button id="addCategory">+</button></h1>
+                    <div id="newCategoryForm" hidden>
+                        <label for="newCategoryName">Category Name:</label><input id="newCategoryName" type="text" class="bg-red-50">
+                        <button id="newCategorySubmit">Submit</button>
+                    </div>
                     <div id="Category-List"></div>
                 </div>
                 <div>
@@ -30,7 +41,7 @@
             </div>
             <div id="middle" class="middle" class="">
                 <div id="chatChannel" class="chat"></div>
-                <div id="chatFeed" style="height:500px; overflow-y:scroll" class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
+                <div id="chatFeed" style="height:500px; overflow-y:auto" class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
                 </div>
                 <div id="newMessageArea">
                     <textarea id="newMessage"></textarea>
