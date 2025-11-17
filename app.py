@@ -38,19 +38,7 @@ if ENV_FILE:
     )
 else:
     DEVELOPMENT_MODE = True
-
-
-# TODO
-# Mock Users should at least have these values
-# session('user)
-# dict_keys(['access_token', 'expires_at', 'expires_in', 'id_token', 'scope', 'token_type', 'userinfo'])
-# session('user).userinfo
-# dict_keys(['email', 'email_verified','nickname', 'picture', 'updated_at'])
-dev_mode_chat_stack = []
-
-
-# Prod API endpoint #
-
+    dev_mode_chat_stack = []
 
 @app.route("/sendMessage", methods=["POST"])
 def send_message():
@@ -146,15 +134,14 @@ def new_category():
 def stream():
     """Stream the chat feed"""
     if DEVELOPMENT_MODE:
-        global dev_mode_chat_stack
+        global dev_mode_chat_stack #pylint: disable=global-statement
         ret = copy.deepcopy(dev_mode_chat_stack)
         dev_mode_chat_stack = []
         return {"messages": ret}
 
-    ## I think topic should be part of session, so every time we switch topic we just set session->topic_id to blah and call stream
     topic = session.get("topic")
 
-    if topic == "general" or topic == None or topic == "":
+    if topic is None or topic == "":
         topic = external_requests.get(
             API_ENDPOINT + "/landing/generalLanding", timeout=DEFAULT_TIMEOUT
         ).json()
@@ -190,7 +177,7 @@ def get_topics():
         session["category"] = topic["category_id"]
         session.update()
 
-    args = f"/topic/" + session.get("category")
+    args = "/topic/" + session.get("category")
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
     return ret.content
 
