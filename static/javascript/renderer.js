@@ -10,7 +10,7 @@ const topic = "general"
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
 let category_cache = []
-let topic_cache=[]
+let topic_cache = []
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
 
@@ -94,10 +94,10 @@ async function switchTopics(event) {
             'Content-Type': 'application/json', // Indicate that the body is JSON
             'Accept': 'application/json', // Specify the expected response type
         },
-        body: topic.replaceAll("'",'"')
+        body: topic.replaceAll("'", '"')
     })
         .then(response => {
-   
+
             if (!response.ok) {
 
             }
@@ -113,19 +113,19 @@ async function loadTopics() {
     await fetch("/topic").then(response => response.json())
         .then(data => {
             let topics = data.topics
-            
+
             topicList.innerHTML = ""
             if (topics && topic_cache != topics) {
-                topic_cache =topics
+                topic_cache = topics
                 if (topics.length > 0) {
                     for (i in topics) {
-                    let newTopic = document.createElement("div")
-                    let newButton = document.createElement("button")
-                    newButton.name = JSON.stringify(topics[i]).replaceAll('"',"'")
-                    newButton.textContent = topics[i].name
-                    newButton.onclick = switchTopics
-                    newTopic.append(newButton)
-                    topicList.append(newTopic)
+                        let newTopic = document.createElement("div")
+                        let newButton = document.createElement("button")
+                        newButton.name = JSON.stringify(topics[i]).replaceAll('"', "'")
+                        newButton.textContent = topics[i].name
+                        newButton.onclick = switchTopics
+                        newTopic.append(newButton)
+                        topicList.append(newTopic)
                     }
                 }
             }
@@ -215,25 +215,32 @@ const addTopicButton = document.getElementById('addTopic')
 const newTopicSubmit = document.getElementById('newTopicSubmit')
 const newTopicName = document.getElementById('newTopicName')
 const newTopicType = document.getElementById('newTopicType')
-addTopicButton.onclick = function(){
-    document.getElementById('newTopicForm').hidden = undefined
+addTopicButton.onclick = function () {
+    if (document.getElementById('newTopicForm').hidden) {
+        document.getElementById('newTopicForm').hidden = undefined
+        addTopicButton.textContent = "-"
+    }
+    else {
+        document.getElementById('newTopicForm').hidden = true
+        addTopicButton.textContent = "+"
+    }
 }
 
 newTopicSubmit.addEventListener('click', async () => {
     let name = newTopicName.value
     let type = newTopicType.value
-    newTopicName.value=""
+    newTopicName.value = ""
     response = await fetch("/new_topic", {
         method: 'POST', // Specify the method as POST
         headers: {
             'Content-Type': 'application/json', // Indicate that the body is JSON
             'Accept': 'application/json', // Specify the expected response type
         },
-        body: JSON.stringify({ name:name, topic_type:type })
+        body: JSON.stringify({ name: name, topic_type: type })
     }).then(response => response.json())
-            .then(data => {
-                loadTopics()
-            }
+        .then(data => {
+            loadTopics()
+        }
         )
 })
 
@@ -241,8 +248,15 @@ newTopicSubmit.addEventListener('click', async () => {
 const addCategoryButton = document.getElementById('addCategory')
 const newCategorySubmit = document.getElementById('newCategorySubmit')
 const newCategoryName = document.getElementById('newCategoryName')
-addCategoryButton.onclick = function(){
-    document.getElementById('newCategoryForm').hidden = undefined
+addCategoryButton.onclick = function () {
+    if (document.getElementById('newCategoryForm').hidden) {
+        document.getElementById('newCategoryForm').hidden = undefined
+        addCategoryButton.textContent = "-"
+    }
+    else {
+        document.getElementById('newCategoryForm').hidden = true
+        addCategoryButton.textContent = "+"
+    }
 }
 
 newCategorySubmit.addEventListener('click', async () => {
@@ -254,12 +268,12 @@ newCategorySubmit.addEventListener('click', async () => {
             'Content-Type': 'application/json', // Indicate that the body is JSON
             'Accept': 'application/json', // Specify the expected response type
         },
-        body: JSON.stringify({ name:name })
+        body: JSON.stringify({ name: name })
     }).then(response => response.json())
-            .then(data => {
-                newCategoryName.value=""
-                loadCategory()
-            }
+        .then(data => {
+            newCategoryName.value = ""
+            loadCategory()
+        }
         )
 })
 
@@ -270,7 +284,7 @@ var sleep = duration => new Promise(resolve => setTimeout(resolve, duration))
 var poll = (promiseFn, duration) => promiseFn().then(
     sleep(duration).then(() => poll(promiseFn, duration)))
 
-// Greet the World every second
+/// This needs to be rewritten to a proper datastream
 /// let refresh = 1000
 let refresh = 100000000
 poll(() => new Promise(() => streamTopic()), refresh)

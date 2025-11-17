@@ -23,7 +23,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 oauth = OAuth(app)
 
 API_ENDPOINT = "http://127.0.0.1:5001"
-if ENV_FILE:
+if False and ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
     API_ENDPOINT = env.get("API_ENDPOINT")
