@@ -23,22 +23,6 @@ function chatHTML(username, image, text) {
         </div></br>";
 }
 
-// if (cookie != null && cookie != "")
-// {
-//     try {
-//     cookie = (JSON.parse(cookie))
-//         if (cookie.username != null){
-//                 loginTab.hidden = "hey"
-//                 mainTab.hidden = undefined
-//         }
-
-//     } catch (error) {
-//     // The cookie read failed    
-//     }
-
-
-// }
-
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic() {
     await fetch("/stream").then(response => response.json())
@@ -109,6 +93,7 @@ async function switchTopics(event) {
         .catch(error => {
         });
 }
+
 async function loadTopics() {
     await fetch("/topic").then(response => response.json())
         .then(data => {
@@ -131,8 +116,8 @@ async function loadTopics() {
             }
         })
 }
-async function loadCategory() {
 
+async function loadCategory() {
     await fetch("/category").then(response => response.json())
         .then(data => {
             categories = data.categories
@@ -183,10 +168,9 @@ async function streamTopic() {
                 }
                 loadCategory()
             })
-
     }
-
 }
+
 const sendMessage = document.getElementById('sendMessage')
 const messageText = document.getElementById('newMessage')
 sendMessage.addEventListener('click', async () => {
