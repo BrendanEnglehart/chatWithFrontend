@@ -18,4 +18,4 @@
     EXPOSE 5000
 
     # Command to run the Flask application
-    CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:gunicorn"]
+    CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1",   "--bind", "0.0.0.0:5000", "app:gunicorn"]

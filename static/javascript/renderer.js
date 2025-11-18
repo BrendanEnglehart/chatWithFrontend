@@ -1,14 +1,12 @@
+import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
 const divUsers = document.getElementById("users")
 document.addEventListener('DOMContentLoaded', async () => {
 
 })
-console.log("loaded render")
 const mainTab = document.getElementById("mainBody")
-let latest = 0
-// Topic logic should all be handled in the app, not in the renderer
-const topic = "general"
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
+const socket = io()
 let category_cache = []
 let topic_cache = []
 // We are all brendan on this blessed day
@@ -23,31 +21,40 @@ function chatHTML(username, image, text) {
         </div></br>";
 }
 
+function parseMessage(username, image, text){
+    chatFeed.innerHTML += chatHTML(username, image, text)
+}
+
+
+socket.on('message', (data) => {
+    parseMessage(data.username, data.picture, data.text)
+});
+
+
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic() {
     await fetch("/stream").then(response => response.json())
         .then(data => {
-            messages = data.messages
+            let messages = data.messages
             chatFeed.innerHTML = ""
             if (messages) {
                 if (messages.length > 0) {
-                    for (i in messages) {
+                    for (var i in messages) {
+                        let picture = default_image
                         if ('picture' in messages[i]) {
                             picture = messages[i].picture
-                        }
-                        else {
-                            picture = default_image
                         }
                         chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
                     }
                 }
 
             }
+            socket.emit('join')
         })
 
 }
 async function switchCategory(event) {
-    console.log(event.target.name)
+
     let category_id = event.target.name
     fetch("/switch_category", {
         method: 'POST', // Specify the method as POST
@@ -70,7 +77,7 @@ async function switchCategory(event) {
         });
 }
 async function switchTopics(event) {
-    console.log(event.target.name)
+    socket.emit("leave")
     let topic = event.target.name
     fetch("/switch_topic", {
         method: 'POST', // Specify the method as POST
@@ -103,7 +110,7 @@ async function loadTopics() {
             if (topics && topic_cache != topics) {
                 topic_cache = topics
                 if (topics.length > 0) {
-                    for (i in topics) {
+                    for (var i in topics) {
                         let newTopic = document.createElement("div")
                         let newButton = document.createElement("button")
                         newButton.name = JSON.stringify(topics[i]).replaceAll('"', "'")
@@ -120,19 +127,17 @@ async function loadTopics() {
 async function loadCategory() {
     await fetch("/category").then(response => response.json())
         .then(data => {
-            categories = data.categories
+            let categories = data.categories
             if (categories) {
                 if (categories.length > 0 && category_cache != categories) {
                     category_cache = categories
                     // it's going to look real annoying at first, I need to dynamically load these better
                     categoryList.innerHTML = ""
-                    for (i in categories) {
+                    for (var i in categories) {
                         let newCategory = document.createElement("div")
                         let newButton = document.createElement("button")
                         newButton.name = categories[i]._id
                         newButton.textContent = categories[i].name
-                        console.log(categories[i]._id)
-                        category_id = categories[i]._id
                         newButton.onclick = switchCategory
                         newCategory.append(newButton)
                         categoryList.append(newCategory)
@@ -149,13 +154,13 @@ async function loadCategory() {
 async function streamTopic() {
     // I'm not putting too much effort into the api requests now because they need to be moved from the renderer to the app.py area
     if (!mainTab.hidden) {
-        response = await fetch("/stream").then(response => response.json())
+        let response = await fetch("/stream").then(response => response.json())
             .then(data => {
-                messages = data.messages
-                if (messages && messages.length > 0) {
-                    latest = messages[messages.length - 1].time
+                let messages = data.messages
+                if (messages && messages.length > 0) {                    
                     if (messages.length > 0) {
-                        for (i in messages) {
+                        for (var i in messages) {
+                            var picture
                             if ('picture' in messages[i]) {
                                 picture = messages[i].picture
                             }
@@ -167,6 +172,7 @@ async function streamTopic() {
                     }
                 }
                 loadCategory()
+                socket.emit("join")
             })
     }
 }
@@ -174,25 +180,8 @@ async function streamTopic() {
 const sendMessage = document.getElementById('sendMessage')
 const messageText = document.getElementById('newMessage')
 sendMessage.addEventListener('click', async () => {
-    fetch("/sendMessage", {
-        method: 'POST', // Specify the method as POST
-        headers: {
-            'Content-Type': 'application/json', // Indicate that the body is JSON
-            'Accept': 'application/json', // Specify the expected response type
-        },
-        body: JSON.stringify({ text: messageText.value })
-    })
-        .then(response => {
-            if (!response.ok) {
-
-            }
-        })
-        .then(data => {
-            messageText.value = ""
-            streamTopic()
-        })
-        .catch(error => {
-        });
+    socket.send('message', messageText.value)
+    messageText.value = ""
 })
 
 const addTopicButton = document.getElementById('addTopic')
@@ -263,13 +252,5 @@ newCategorySubmit.addEventListener('click', async () => {
 
 
 const chatFeed = document.getElementById("chatFeed")
-
-var sleep = duration => new Promise(resolve => setTimeout(resolve, duration))
-var poll = (promiseFn, duration) => promiseFn().then(
-    sleep(duration).then(() => poll(promiseFn, duration)))
-
-/// This needs to be rewritten to a proper datastream
-/// let refresh = 1000
-let refresh = 100000000
-poll(() => new Promise(() => streamTopic()), refresh)
+streamTopic()
 

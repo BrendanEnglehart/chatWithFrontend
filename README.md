@@ -18,12 +18,12 @@ python app.py
 ## Current Features
 
 ### Chat
-As of right now the only feature is the main chat and this is broken into two separate repos that have to be built individually. You can run this app in Dev mode, but if you wish to run this more than locally you will need to configure https://github.com/BrendanEnglehart/chatWithRestAPI to work for your environment. The chat features the ability to have and create multiple categories containing multiple topics which you can switch through.
+As of right now the only feature is the main chat and this is broken into two separate repos that have to be built individually. You can run this app in Dev mode, but if you wish to run this more than locally you will need to configure https://github.com/BrendanEnglehart/chatWithRestAPI to work for your environment. The chat features the ability to have and create multiple categories containing multiple topics which you can switch through. 
 
 # Next Steps
 
 ## Better Protocols for Chat Feeds
-Right now I've just thrown normal get and post requests to run the chat feeds. This is very unsustainable long term and in the immediate future this project will need to pick up better ways to handle connection streams. My goal is to have a service that is easy to extend so I am looking over options with manageable but still usable features.
+Currently we are sending Json and raw data back and forth between the client and server, then passing that as get and post requests to the API server for long term storage. In the future we need to follow better messaging protocols.
 
 ## New Topic Types
 The ideal reason for multiple topics is to split up the ability to create multiple topic types that have different functionality, this is where I want the most extensibility 

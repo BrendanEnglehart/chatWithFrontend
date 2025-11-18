@@ -3,16 +3,16 @@
 import datetime
 import json
 import copy
-from pprint import pprint
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
 import requests as external_requests
 from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, redirect, render_template, session, url_for, request
+from flask_socketio import join_room, leave_room, SocketIO, emit
 
 
-DEVELOPMENT_MODE = True
+DEVELOPMENT_MODE = False
 ENV_FILE = find_dotenv()
 DEFAULT_TIMEOUT = (
     15  # default timeout for server requests. Most requests are less than a second.
@@ -21,9 +21,9 @@ DEFAULT_TIMEOUT = (
 app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 oauth = OAuth(app)
-
+socketio = SocketIO()
 API_ENDPOINT = "http://127.0.0.1:5001"
-if False and ENV_FILE:
+if ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
     API_ENDPOINT = env.get("API_ENDPOINT")
@@ -40,6 +40,50 @@ else:
     DEVELOPMENT_MODE = True
     dev_mode_chat_stack = []
 
+
+@socketio.on("message")
+def handle_message(context, data):
+    """Socket Handler for message sending"""
+    # text = request.get_json()["text"]
+    text = data
+    if DEVELOPMENT_MODE:
+        dev_mode_chat_stack.append(
+            {
+                "username": "test",
+                "picture": "https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&am"
+                + "p;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
+                "topic": "general",
+                "text": text,
+            }
+        )
+        return
+
+    topic = session.get("topic")
+    message = (
+        {
+            "username": session.get("user")["userinfo"]["nickname"],
+            "picture": session.get("user")["userinfo"]["picture"],
+            "topic": topic["_id"],
+            "text": text,
+        },
+    )
+    ret = external_requests.post(
+        API_ENDPOINT + "/message/" + topic["_id"],
+        json={
+            "username": session.get("user")["userinfo"]["nickname"],
+            "picture": session.get("user")["userinfo"]["picture"],
+            "topic": topic["_id"],
+            "text": text,
+        },
+        timeout=DEFAULT_TIMEOUT,
+    )
+    emit("message", message, json=True, to=topic["_id"], include_self=True)
+    if ret.ok:
+        print("ok")
+    else:
+        print(ret.raise_for_status())
+
+
 @app.route("/sendMessage", methods=["POST"])
 def send_message():
     """Send the message written in the text block to the server"""
@@ -55,9 +99,8 @@ def send_message():
         )
         return {}
 
-    pprint(session.get("user"))
     topic = session.get("topic")
-    pprint(topic)
+
     ret = external_requests.post(
         API_ENDPOINT + "/message/" + topic["_id"],
         json={
@@ -134,7 +177,7 @@ def new_category():
 def stream():
     """Stream the chat feed"""
     if DEVELOPMENT_MODE:
-        global dev_mode_chat_stack #pylint: disable=global-statement
+        global dev_mode_chat_stack  # pylint: disable=global-statement
         ret = copy.deepcopy(dev_mode_chat_stack)
         dev_mode_chat_stack = []
         return {"messages": ret}
@@ -148,14 +191,13 @@ def stream():
         session["topic"] = topic
         session["category"] = topic["category_id"]
 
-    pprint(topic)
     time = session.get("stream_latest")
     if time is None:
         time = datetime.datetime.min
     session["stream_latest"] = datetime.datetime.now()
     session.update()
     args = f"/message/stream/topic={topic['_id']}&time={time}"
-    pprint(topic)
+
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
     if ret.ok:
         print("ok")
@@ -189,7 +231,7 @@ def get_categories():
         return {"text": 200}
     args = "/category/category/"
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
-    pprint(ret.content)
+
     return ret.content
 
 
@@ -241,7 +283,23 @@ def logout():
     )
 
 
+@socketio.on("join")
+def on_join():
+    """User Joins a topic"""
+    topic = session.get("topic")
+    join_room(topic["_id"])
+
+
+@socketio.on("leave")
+def on_leave():
+    """User leaves a topic"""
+    topic = session.get("topic")
+    leave_room(topic["_id"])
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.init_app(app)
+    socketio.run(app, port=5000, host="0.0.0.0")
 else:
+    socketio.init_app(app)
     gunicorn = app
