@@ -44,18 +44,23 @@ else:
 @socketio.on("message")
 def handle_message(context, data):
     """Socket Handler for message sending"""
-    # text = request.get_json()["text"]
+    print(context)
     text = data
     if DEVELOPMENT_MODE:
-        dev_mode_chat_stack.append(
+        emit(
+            "message",
             {
                 "username": "test",
                 "picture": "https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&am"
                 + "p;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
                 "topic": "general",
                 "text": text,
-            }
+            },
+            json=True,
+            to="general",
+            include_self=True,
         )
+
         return
 
     topic = session.get("topic")
@@ -286,6 +291,9 @@ def logout():
 @socketio.on("join")
 def on_join():
     """User Joins a topic"""
+    if DEVELOPMENT_MODE:
+        join_room("general")
+        return
     topic = session.get("topic")
     join_room(topic["_id"])
 
@@ -293,6 +301,10 @@ def on_join():
 @socketio.on("leave")
 def on_leave():
     """User leaves a topic"""
+    if DEVELOPMENT_MODE:
+        leave_room("general")
+        return
+
     topic = session.get("topic")
     leave_room(topic["_id"])
 
