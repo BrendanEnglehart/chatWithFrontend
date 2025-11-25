@@ -11,52 +11,72 @@
 </head>
 
 <body style="height: 60%;" class="w-full h-full flex text-gray-900 dark:text-white bg-white dark:bg-gray-900">
-    <div class="rounded-xl bg-white p-10 text-sm/7 text-gray-700 dark:bg-gray-900 dark:text-cyan-500">
-    {% if (session) %}
-    <div id="mainBody">
-        <div class="grid grid-cols-3">
-            <div id="left" class="grid h-full w-15">
-                <div style="height:250px; overflow-y:auto" id="Topics">
-                    <h1>Topics <button id="addTopic">+</button></h1>
-                    <div id="newTopicForm" hidden>
-                        <label for="newTopicName">Topic Name:</label><input id="newTopicName" type="text" class="bg-red-50">
-                        <label for="newTopicType">Topic Type: </label><select id="newTopicType"> 
-                            <option value="chat">Chat</option>
-                        </select>
-                        <button id="newTopicSubmit">Submit</button>
+    <div class="rounded-xl bg-green-400 p-10 text-sm/7 text-gray-700 dark:bg-gray-900 dark:text-cyan-500">
+        {% if (session) %}
+        <div id="mainBody">
+            <div class="grid grid-cols-3">
+                <div id="left" class="grid h-full w-15">
+                    <div style="height:250px; overflow-y:auto" id="Topics">
+                        <h1>Topics <button id="addTopic">+</button></h1>
+                        <div id="newTopicForm" hidden>
+                            <label for="newTopicName">Topic Name:</label><input id="newTopicName" type="text"
+                                class="bg-red-50">
+                            <label for="newTopicType">Topic Type: </label><select id="newTopicType">
+                                <option value="chat">Chat</option>
+                            </select>
+                            <button id="newTopicSubmit">Submit</button>
+                        </div>
+                        <div id="Topic-List"></div>
                     </div>
-                    <div id="Topic-List"></div>
-                </div>
-                <div style="height:250px; overflow-y:auto" id="Categories">
-                    <h1>Categories <button id="addCategory">+</button></h1>
-                    <div id="newCategoryForm" hidden>
-                        <label for="newCategoryName">Category Name:</label><input id="newCategoryName" type="text" class="bg-red-50">
-                        <button id="newCategorySubmit">Submit</button>
+                    <div style="height:250px; overflow-y:auto" id="Categories">
+                        <h1>Categories <button id="addCategory">+</button></h1>
+                        <div id="newCategoryForm" hidden>
+                            <label for="newCategoryName">Category Name:</label><input id="newCategoryName" type="text"
+                                class="bg-red-50">
+                            <button id="newCategorySubmit">Submit</button>
+                        </div>
+                        <div id="Category-List"></div>
                     </div>
-                    <div id="Category-List"></div>
+                    <div>
+                        <button id="logout"><a href="/logout">Logout</a></button>
+                    </div>
                 </div>
-                <div>
-                    <button id="logout"><a href="/logout">Logout</a></button>
+                <div id="middle" class="middle" class="">
+                    <div id="chatChannel" class="chat"></div>
+                    <div id="chatFeed" style="height:500px; overflow-y:auto"
+                        class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
+                    </div>
+                    <div id="newMessageArea" class="grid-cols-4">
+                        <textarea id="newMessage" rows="1"
+                            class="mx-4 bg-neutral-primary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand  px-3 py-2.5 placeholder:text-body"
+                            placeholder="Your message..."></textarea>
+                        <button id="sendMessage" type="button"
+                            class="inline-flex justify-center p-2 text-fg-brand rounded-full cursor-pointer hover:bg-brand-softer">
+                            <svg class="w-6 h-6 rotate-90 rtl:-rotate-90" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m12 18-7 3 7-18 7 18-7-3Zm0 0v-5" />
+                            </svg>
+                        </button>
+                    </div>
+
+
+
+
+
                 </div>
+
             </div>
-            <div id="middle" class="middle" class="">
-                <div id="chatChannel" class="chat"></div>
-                <div id="chatFeed" style="height:500px; overflow-y:auto" class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
-                </div>
-                <div id="newMessageArea">
-                    <textarea id="newMessage"></textarea>
-                    <button id="sendMessage">Send</button>
-                </div>
-            </div>
-  
+
+            {% else %}
+            <h1>Welcome Guest</h1>
+            <p><a href="/login">Login</a></p>
+            {% endif %}
         </div>
-       
-        {% else %}
-        <h1>Welcome Guest</h1>
-        <p><a href="/login">Login</a></p>
-        {% endif %}
-         </div>
-        <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js" integrity="sha384-MSs+BqXxw28ZIXyaZuFJkjeE6ACbqCIlyaQTt3nbXHfvbJ89vAdKFAXWt0EsCD4s" crossorigin="anonymous"></script>
+        <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js"
+            integrity="sha384-MSs+BqXxw28ZIXyaZuFJkjeE6ACbqCIlyaQTt3nbXHfvbJ89vAdKFAXWt0EsCD4s"
+            crossorigin="anonymous"></script>
         <script type="module" src="../static/javascript/renderer.js"></script>
 </body>
 
