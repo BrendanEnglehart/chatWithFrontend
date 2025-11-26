@@ -12,9 +12,10 @@ let isDrawing = false
 let category_cache = []
 let topic_cache = []
 let ctx = undefined
-let topic_type = "chat"
+let topic_type = "nothing"
 let canvas = undefined
 let draw_glob = []
+let topic_id = ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
 //global variabels wiht default values
@@ -48,7 +49,7 @@ const drawing = (e) => {
 }
 
 const stopDrawing = (e) => {
-    socket.send('message', JSON.stringify(draw_glob))
+    socket.send(topic_id, JSON.stringify(draw_glob))
     isDrawing = false
     draw_glob = []
 }
@@ -81,11 +82,11 @@ function chatHTML(username, image, text) {
 }
 
 function parseMessage(username, image, text) {
-    if (topic_type == "chat") {
-        chatFeed.innerHTML += chatHTML(username, image, text)
-    }
     if (topic_type == "drawing") {
         drawFeed(JSON.parse(text), selectedColor, brushWidth)
+    }
+    if (topic_type == "chat" || topic_type == "general") {
+        chatFeed.innerHTML += chatHTML(username, image, text)
     }
 }
 
@@ -99,7 +100,8 @@ const resetCanvasBackground = (current_canvas) => {
     ctx.fillStyle = "#fff";
 }
 // This should be called load Topic, or something smarter, right now it's not that great
-async function switchTopic() {
+async function switchTopic(nextTopic) {
+    topic_id = nextTopic["_id"]
     chatFeed.innerHTML = ""
     if (topic_type == "drawing") {
         // Starting canvas for the initial drawing app
@@ -108,7 +110,6 @@ async function switchTopic() {
         newMessageArea.hidden = "Yes I'm Hidden";
         ctx = canvas.getContext("2d");
         resetCanvasBackground(canvas);
-        socket.emit("join")
         canvas.addEventListener("mousedown", startDraw);
         canvas.addEventListener("mousemove", drawing);
         canvas.addEventListener("mouseup", stopDrawing);
@@ -125,10 +126,11 @@ async function switchTopic() {
                         }
                     }
                 }
+                socket.emit("join", nextTopic["_id"])
 
             })
     }
-    else if (topic_type == "chat") {
+    else if (topic_type == "chat" || topic_type == "general") {
         await fetch("/stream").then(response => response.json())
             .then(data => {
                 newMessageArea.hidden = undefined
@@ -146,8 +148,10 @@ async function switchTopic() {
                     }
 
                 }
-                socket.emit('join')
+                console.log("here")
+                socket.emit("join", nextTopic["_id"])
             })
+            .catch(error => {console.log(error)})
     }
     else {
         console.log(topic_type)
@@ -177,11 +181,14 @@ async function switchCategory(event) {
         });
 }
 async function switchTopics(event) {
-    socket.emit("leave")
+    if (topic_id != "")
+        socket.emit("leave", topic_id)
+    else 
+        socket.emit("leaveSession")
     let topic = event.target.name
     let nextTopic = JSON.parse(topic.replaceAll("'", '"')) // Again, this is bad, but better is for later
     topic_type = nextTopic["type"]
-    fetch("/switch_topic", {
+    await fetch("/switch_topic", {
         method: 'POST', // Specify the method as POST
         headers: {
             'Content-Type': 'application/json', // Indicate that the body is JSON
@@ -194,13 +201,14 @@ async function switchTopics(event) {
             if (!response.ok) {
 
             }
+            return response.json()
         })
         .then(data => {
-
-            switchTopic()
-            return response
+            console.log(data)
+            switchTopic(nextTopic)
         })
         .catch(error => {
+            console.log(error)
         });
 }
 
@@ -275,7 +283,7 @@ async function streamTopic() {
                     }
                 }
                 loadCategory()
-                socket.emit("join")
+                socket.emit("joinSession")
             })
     }
 }
@@ -283,7 +291,7 @@ async function streamTopic() {
 const sendMessage = document.getElementById('sendMessage')
 const messageText = document.getElementById('newMessage')
 sendMessage.addEventListener('click', async () => {
-    socket.send('message', messageText.value)
+    socket.send(topic_id, messageText.value)
     messageText.value = ""
 })
 
@@ -306,18 +314,25 @@ newTopicSubmit.addEventListener('click', async () => {
     let name = newTopicName.value
     let type = newTopicType.value
     newTopicName.value = ""
-    response = await fetch("/new_topic", {
+    await fetch("/new_topic", {
         method: 'POST', // Specify the method as POST
         headers: {
             'Content-Type': 'application/json', // Indicate that the body is JSON
             'Accept': 'application/json', // Specify the expected response type
         },
         body: JSON.stringify({ name: name, topic_type: type })
-    }).then(response => response.json())
-        .then(data => {
-            loadTopics()
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        )
+    })
+    .then(data => {
+            document.getElementById('newTopicForm').hidden = true
+            addTopicButton.textContent = "+"
+            loadTopics()
+    })
+    .catch(error => console.error('Error:', error));
 })
 
 

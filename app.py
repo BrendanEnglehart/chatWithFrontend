@@ -42,9 +42,9 @@ else:
 
 
 @socketio.on("message")
-def handle_message(context, data):
+def handle_message(room, data):
     """Socket Handler for message sending"""
-    #print(context)
+    print(data)
     text = data
     if DEVELOPMENT_MODE:
         emit(
@@ -63,26 +63,29 @@ def handle_message(context, data):
 
         return
 
-    topic = session.get("topic")
+    # On Reload, the room is stored in the session
+    # otherwise, it isn't the source of truth
+    if room == "":
+        room = session.get("topic")["_id"]
     message = (
         {
             "username": session.get("user")["userinfo"]["nickname"],
             "picture": session.get("user")["userinfo"]["picture"],
-            "topic": topic["_id"],
+            "topic": room,
             "text": text,
         },
     )
     ret = external_requests.post(
-        API_ENDPOINT + "/message/" + topic["_id"],
+        API_ENDPOINT + "/message/" + room,
         json={
             "username": session.get("user")["userinfo"]["nickname"],
             "picture": session.get("user")["userinfo"]["picture"],
-            "topic": topic["_id"],
+            "topic": room,
             "text": text,
         },
         timeout=DEFAULT_TIMEOUT,
     )
-    emit("message", message, json=True, to=topic["_id"], include_self=True)
+    emit("message", message, json=True, to=room, include_self=True)
     if ret.ok:
         pass
     else:
@@ -140,7 +143,9 @@ def switch_topic():
     if DEVELOPMENT_MODE:
         return {"text": 200}
     topic = request.get_json()
+    print(topic)
     session["topic"] = topic
+    session.update()
     session["stream_latest"] = datetime.datetime.min
     session.update()
     return {"text": 200}
@@ -289,17 +294,35 @@ def logout():
 
 
 @socketio.on("join")
-def on_join():
+def on_join(topic_id):
+    """User Joins a topic"""
+    if DEVELOPMENT_MODE:
+        join_room("general")
+        return
+    print(topic_id)
+    join_room(topic_id)
+
+@socketio.on("joinSession")
+def on_join_session():
     """User Joins a topic"""
     if DEVELOPMENT_MODE:
         join_room("general")
         return
     topic = session.get("topic")
+    print(topic)
     join_room(topic["_id"])
 
-
 @socketio.on("leave")
-def on_leave():
+def on_leave(topic_id):
+    """User leaves a topic"""
+    if DEVELOPMENT_MODE:
+        leave_room("general")
+        return
+    leave_room(topic_id)
+
+
+@socketio.on("leaveSession")
+def on_leave_session():
     """User leaves a topic"""
     if DEVELOPMENT_MODE:
         leave_room("general")
