@@ -110,7 +110,7 @@ export class Drawing {
                     if ("color" in art_object[0])
                         color = art_object[0].color
                     if ("width" in art_object[0])
-                        width = art_object[0].color
+                        width = art_object[0].width
 
 
                     this.drawFeed(art_object, color, width)
