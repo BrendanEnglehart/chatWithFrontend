@@ -44,7 +44,7 @@ else:
 @socketio.on("message")
 def handle_message(context, data):
     """Socket Handler for message sending"""
-    print(context)
+    #print(context)
     text = data
     if DEVELOPMENT_MODE:
         emit(
@@ -84,7 +84,7 @@ def handle_message(context, data):
     )
     emit("message", message, json=True, to=topic["_id"], include_self=True)
     if ret.ok:
-        print("ok")
+        pass
     else:
         print(ret.raise_for_status())
 
@@ -117,7 +117,7 @@ def send_message():
         timeout=DEFAULT_TIMEOUT,
     )
     if ret.ok:
-        print("ok")
+        pass # Changing out print message for something else
     else:
         print(ret.raise_for_status())
     return ret.content
@@ -205,7 +205,7 @@ def stream():
 
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
     if ret.ok:
-        print("ok")
+        pass # Changing out print message
     else:
         print(ret.raise_for_status())
     return ret.content
