@@ -14,7 +14,7 @@ export class Drawing {
     brushWidth = 1;
     selectedColor = "#000";
     topic_id;
-
+    sizePicker;
     colorPicker;
 
     initializeColorPicker() {
@@ -25,6 +25,12 @@ export class Drawing {
         })
     }
 
+    initializeSizePicker() {
+        this.sizePicker = document.getElementById('size-picker')
+        this.sizePicker.addEventListener("change", () => {
+            this.changeSize(this.sizePicker.value)
+        })
+    }
 
     constructor(newCanvas, socket, topic_id) {
         this.canvas = newCanvas
@@ -36,6 +42,7 @@ export class Drawing {
         this.resetCanvasBackground()
         this.topic_id = topic_id
         this.initializeColorPicker()
+        this.initializeSizePicker()
     }
     drawFeed(art, color, mybrushWidth) {
         this.ctx.lineWidth = mybrushWidth;
@@ -53,6 +60,9 @@ export class Drawing {
     }
     changeColor(color) {
         this.selectedColor = color
+    }
+    changeSize(size) {
+        this.brushWidth = size
     }
 
 

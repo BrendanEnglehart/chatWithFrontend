@@ -11,15 +11,15 @@ export class ChatFeed {
     constructor(chat) {
         this.chat = chat;
     }
-    colorTool = '<input type="color" value="#00FF00" name="" id="color-picker">'
-
+    colorTool = 'Color: <input type="color" value="#00FF00" name="" id="color-picker">'
+    sizeTool = 'Size: <input type="range" id="size-picker" min="1" max="30" value="5">'
     repurposeFeed(newFeed) {
         this.chat.innerHTML = newFeed
     }
 
 
     repurposeFeedForDrawing() {
-        this.repurposeFeed(this.colorTool + "<canvas id=\"Drawing\" width=\"500\" height=\"500\"></canvas>")
+        this.repurposeFeed(this.colorTool + this.sizeTool + "<canvas id=\"Drawing\" width=\"500\" height=\"500\"></canvas>")
     }
     parseMessage(username, image, text) {
         this.chat.innerHTML += this.chatHTML(username, image, text)
