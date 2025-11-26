@@ -20,6 +20,9 @@ python app.py
 ### Chat
 As of right now the only feature is the main chat and this is broken into two separate repos that have to be built individually. You can run this app in Dev mode, but if you wish to run this more than locally you will need to configure https://github.com/BrendanEnglehart/chatWithRestAPI to work for your environment. The chat features the ability to have and create multiple categories containing multiple topics which you can switch through. 
 
+### Draw With
+Draw together with everyone one your server, create interesting and work appropriate artwork.
+
 # Next Steps
 
 ## Better Protocols for Chat Feeds
