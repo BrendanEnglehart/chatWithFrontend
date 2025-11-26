@@ -1,4 +1,6 @@
 import { io } from "https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js";
+import { Drawing } from './drawTopic.js'
+import { ChatFeed } from "./chatFeed.js";
 const divUsers = document.getElementById("users")
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -8,85 +10,24 @@ const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
 const newMessageArea = document.getElementById('newMessageArea')
 const socket = io()
+let drawing;
 let isDrawing = false
 let category_cache = []
 let topic_cache = []
-let ctx = undefined
 let topic_type = "nothing"
-let canvas = undefined
-let draw_glob = []
 let topic_id = ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
 //global variabels wiht default values
-let prevMouseX, prevMouseY, snapshot,
-    selectedTool = "brush",
-    brushWidth = 5,
+let brushWidth = 5,
     selectedColor = "#000";
-
-
-const startDraw = (e) => {
-    isDrawing = true;
-    prevMouseX = e.offsetX;
-    prevMouseY = e.offsetY;
-    draw_glob = [{ "x": prevMouseX, "y": prevMouseY }]
-
-    ctx.beginPath();
-    ctx.lineWidth = brushWidth;
-    ctx.strokeStyle = selectedColor;
-    ctx.fillStyle = selectedColor;
-    snapshot = ctx.getImageData(0, 0, canvas.width,
-        canvas.height);
-}
-
-const drawing = (e) => {
-    if (!isDrawing) return;
-    ctx.putImageData(snapshot, 0, 0);
-    draw_glob.push({ "x": e.offsetX, "y": e.offsetY })
-
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-}
-
-const stopDrawing = (e) => {
-    socket.send(topic_id, JSON.stringify(draw_glob))
-    isDrawing = false
-    draw_glob = []
-}
-
-function drawFeed(art, color, mybrushWidth) {
-
-    ctx.lineWidth = brushWidth;
-    ctx.strokeStyle = selectedColor;
-    ctx.fillStyle = selectedColor;
-    snapshot = ctx.getImageData(0, 0, canvas.width,
-        canvas.height);
-    ctx.beginPath();
-    for (let coordinate of art) {
-        ctx.putImageData(snapshot, 0, 0);
-        ctx.lineTo(coordinate.x, coordinate.y)
-        ctx.stroke();
-    }
-
-
-
-}
-
-
-// This won't persist, but I'm using it right now as a crutch
-function chatHTML(username, image, text) {
-    return "<div class='grid grid-cols-2'>\
-          <div><img src='"+ image + "' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
-          <div class='grid grid-cols-1'><strong>"+ username + "</strong> <span>" + text + "</span></div>\
-        </div></br>";
-}
 
 function parseMessage(username, image, text) {
     if (topic_type == "drawing") {
-        drawFeed(JSON.parse(text), selectedColor, brushWidth)
+        drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
     }
     if (topic_type == "chat" || topic_type == "general") {
-        chatFeed.innerHTML += chatHTML(username, image, text)
+        chatFeed.parseMessage(username, image, text)
     }
 }
 
@@ -94,38 +35,21 @@ socket.on('message', (data) => {
     parseMessage(data.username, data.picture, data.text)
 });
 
-const resetCanvasBackground = (current_canvas) => {
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, current_canvas.width, current_canvas.height);
-    ctx.fillStyle = "#fff";
-}
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic(nextTopic) {
     topic_id = nextTopic["_id"]
     topic_type = nextTopic["type"]
-    chatFeed.innerHTML = ""
+    chatFeed.clear()
     if (topic_type == "drawing") {
         // Starting canvas for the initial drawing app
-        chatFeed.innerHTML = "<canvas id=\"Drawing\" width=\"500\" height=\"500\"></canvas>"
-        canvas = document.getElementById("Drawing");
+        chatFeed.repurposeFeedForDrawing()
         newMessageArea.hidden = "Yes I'm Hidden";
-        ctx = canvas.getContext("2d");
-        resetCanvasBackground(canvas);
-        canvas.addEventListener("mousedown", startDraw);
-        canvas.addEventListener("mousemove", drawing);
-        canvas.addEventListener("mouseup", stopDrawing);
+        drawing = new Drawing(document.getElementById("Drawing"), socket, topic_id)
         await fetch("/stream").then(response => response.json())
             .then(data => {
                 let messages = data.messages
                 if (messages) {
-                    if (messages.length > 0) {
-                        for (var i in messages) {
-                            let art_thing = JSON.parse(messages[i].text)
-                            if (art_thing.length > 0 && "x" in art_thing[0]) {
-                                drawFeed(art_thing, "", "")
-                            }
-                        }
-                    }
+                    drawing.streamDrawing(messages)
                 }
                 socket.emit("join", nextTopic["_id"])
 
@@ -136,22 +60,13 @@ async function switchTopic(nextTopic) {
             .then(data => {
                 newMessageArea.hidden = undefined
                 let messages = data.messages
-                chatFeed.innerHTML = ""
+                chatFeed.clear()
                 if (messages) {
-                    if (messages.length > 0) {
-                        for (var i in messages) {
-                            let picture = default_image
-                            if ('picture' in messages[i]) {
-                                picture = messages[i].picture
-                            }
-                            chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
-                        }
-                    }
-
+                    chatFeed.streamMessages(messages)
                 }
                 socket.emit("join", nextTopic["_id"])
             })
-            .catch(error => {console.log(error)})
+            .catch(error => { console.log(error) })
     }
     else {
     }
@@ -182,7 +97,7 @@ async function switchCategory(event) {
 async function switchTopics(event) {
     if (topic_id != "")
         socket.emit("leave", topic_id)
-    else 
+    else
         socket.emit("leaveSession")
     let topic = event.target.name
     let nextTopic = JSON.parse(topic.replaceAll("'", '"')) // Again, this is bad, but better is for later
@@ -294,17 +209,17 @@ newTopicSubmit.addEventListener('click', async () => {
         },
         body: JSON.stringify({ name: name, topic_type: type })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    })
-    .then(data => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        })
+        .then(data => {
             document.getElementById('newTopicForm').hidden = true
             addTopicButton.textContent = "+"
             loadTopics()
-    })
-    .catch(error => console.error('Error:', error));
+        })
+        .catch(error => console.error('Error:', error));
 })
 
 
@@ -325,7 +240,7 @@ addCategoryButton.onclick = function () {
 newCategorySubmit.addEventListener('click', async () => {
     let name = newCategoryName.value
     document.getElementById('newCategoryForm').hidden = "yes"
-    response = await fetch("/new_category", {
+    await fetch("/new_category", {
         method: 'POST', // Specify the method as POST
         headers: {
             'Content-Type': 'application/json', // Indicate that the body is JSON
@@ -335,17 +250,19 @@ newCategorySubmit.addEventListener('click', async () => {
     }).then(response => response.json())
         .then(data => {
             newCategoryName.value = ""
+            document.getElementById('newCategoryForm').hidden = true
+            addCategoryButton.textContent = "+"
             loadCategory()
         }
         )
 })
 
 
-const chatFeed = document.getElementById("chatFeed")
+const chatFeed = new ChatFeed(document.getElementById("chatFeed"))
 
 async function loadSelf() {
     loadCategory()
-    await fetch("/load_self").then(response => response.json()).then(data=> {
+    await fetch("/load_self").then(response => response.json()).then(data => {
         switchTopic(data)
     })
 }
