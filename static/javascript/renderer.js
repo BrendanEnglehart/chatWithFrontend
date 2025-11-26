@@ -102,6 +102,7 @@ const resetCanvasBackground = (current_canvas) => {
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic(nextTopic) {
     topic_id = nextTopic["_id"]
+    topic_type = nextTopic["type"]
     chatFeed.innerHTML = ""
     if (topic_type == "drawing") {
         // Starting canvas for the initial drawing app
@@ -148,13 +149,11 @@ async function switchTopic(nextTopic) {
                     }
 
                 }
-                console.log("here")
                 socket.emit("join", nextTopic["_id"])
             })
             .catch(error => {console.log(error)})
     }
     else {
-        console.log(topic_type)
     }
 }
 async function switchCategory(event) {
@@ -204,7 +203,6 @@ async function switchTopics(event) {
             return response.json()
         })
         .then(data => {
-            console.log(data)
             switchTopic(nextTopic)
         })
         .catch(error => {
@@ -261,32 +259,6 @@ async function loadCategory() {
     loadTopics()
 }
 
-// We'll need to come back to this one TODO
-async function streamTopic() {
-    // I'm not putting too much effort into the api requests now because they need to be moved from the renderer to the app.py area
-    if (!mainTab.hidden) {
-        let response = await fetch("/stream").then(response => response.json())
-            .then(data => {
-                let messages = data.messages
-                if (messages && messages.length > 0) {
-                    if (messages.length > 0) {
-                        for (var i in messages) {
-                            var picture
-                            if ('picture' in messages[i]) {
-                                picture = messages[i].picture
-                            }
-                            else {
-                                picture = default_image
-                            }
-                            chatFeed.innerHTML += chatHTML(messages[i].username, picture, messages[i].text)
-                        }
-                    }
-                }
-                loadCategory()
-                socket.emit("joinSession")
-            })
-    }
-}
 
 const sendMessage = document.getElementById('sendMessage')
 const messageText = document.getElementById('newMessage')
@@ -370,5 +342,14 @@ newCategorySubmit.addEventListener('click', async () => {
 
 
 const chatFeed = document.getElementById("chatFeed")
-streamTopic()
+
+async function loadSelf() {
+    loadCategory()
+    await fetch("/load_self").then(response => response.json()).then(data=> {
+        switchTopic(data)
+    })
+}
+
+
+loadSelf()
 

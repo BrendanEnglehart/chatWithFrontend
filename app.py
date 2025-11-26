@@ -44,7 +44,7 @@ else:
 @socketio.on("message")
 def handle_message(room, data):
     """Socket Handler for message sending"""
-    print(data)
+
     text = data
     if DEVELOPMENT_MODE:
         emit(
@@ -89,7 +89,7 @@ def handle_message(room, data):
     if ret.ok:
         pass
     else:
-        print(ret.raise_for_status())
+        app.logger.error(ret.raise_for_status())
 
 
 @app.route("/sendMessage", methods=["POST"])
@@ -122,7 +122,7 @@ def send_message():
     if ret.ok:
         pass # Changing out print message for something else
     else:
-        print(ret.raise_for_status())
+        app.logger.error(ret.raise_for_status())
     return ret.content
 
 
@@ -143,7 +143,6 @@ def switch_topic():
     if DEVELOPMENT_MODE:
         return {"text": 200}
     topic = request.get_json()
-    print(topic)
     session["topic"] = topic
     session.update()
     session["stream_latest"] = datetime.datetime.min
@@ -183,6 +182,25 @@ def new_category():
     ).content
 
 
+@app.route("/load_self", methods=["get"])
+def load_self():
+    """On initial page load, acquire current configuration"""
+    if DEVELOPMENT_MODE:
+        return {"response":200}
+    topic = session.get("topic")
+
+    if topic is None or topic == "":
+        topic = external_requests.get(
+            API_ENDPOINT + "/landing/generalLanding", timeout=DEFAULT_TIMEOUT
+        ).json()
+        session["topic"] = topic
+        session["category"] = topic["category_id"]
+
+    session["stream_latest"] = datetime.datetime.min
+    session.update()
+    return topic
+
+# Deprecate me
 @app.route("/stream", methods=["get"])
 def stream():
     """Stream the chat feed"""
@@ -207,12 +225,12 @@ def stream():
     session["stream_latest"] = datetime.datetime.now()
     session.update()
     args = f"/message/stream/topic={topic['_id']}&time={time}"
-
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
     if ret.ok:
         pass # Changing out print message
     else:
-        print(ret.raise_for_status())
+        app.logger.error(ret.raise_for_status())
+
     return ret.content
 
 
@@ -299,7 +317,7 @@ def on_join(topic_id):
     if DEVELOPMENT_MODE:
         join_room("general")
         return
-    print(topic_id)
+
     join_room(topic_id)
 
 @socketio.on("joinSession")
@@ -309,7 +327,7 @@ def on_join_session():
         join_room("general")
         return
     topic = session.get("topic")
-    print(topic)
+
     join_room(topic["_id"])
 
 @socketio.on("leave")
