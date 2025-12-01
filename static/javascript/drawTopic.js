@@ -17,6 +17,11 @@ export class Drawing {
     sizePicker;
     colorPicker;
 
+    /**
+     * Initialize the Color Picker Area
+     * Doesn't take arguments but assumes there are some html
+     * elements on the page
+     */
     initializeColorPicker() {
         this.colorPicker = document.getElementById("color-picker")
         let colorPickerArea = document.getElementById("color-picker-area")
@@ -27,14 +32,15 @@ export class Drawing {
         )
     }
 
+    /**
+     * Initialize the Brush Size Area
+     * Doesn't take arguments but assumes there are some html
+     * elements on the page
+     */
     initializeSizePicker() {
         this.sizePicker = document.getElementById('size-picker')
         let sizePickerArea = document.getElementById('brush-size-area')
         sizePickerArea.hidden = undefined
-        this.sizePicker.removeEventListener("change", this.changeSize())
-        this.sizePicker.addEventListener("change",
-            this.changeSize()
-        )
     }
 
     constructor(newCanvas, socket, topic_id) {
@@ -49,6 +55,13 @@ export class Drawing {
         this.initializeColorPicker()
         this.initializeSizePicker()
     }
+
+    /**
+     * 
+     * @param {Object} art -> Array of X/Y coordinates in the direction of the brushstroke
+     * @param {String} color -> Color of the brushstroke
+     * @param {String} mybrushWidth -> Size of the Brushstroke
+     */
     drawFeed(art, color, mybrushWidth) {
         this.ctx.lineWidth = mybrushWidth;
         this.ctx.strokeStyle = color;
@@ -63,28 +76,37 @@ export class Drawing {
         }
 
     }
+
+    /**
+     * Change the color to the current color picker value
+     * Useful for the callback
+     */
     changeColor() {
-        this.selectedColor = this.colorPicker.value
-    }
-    changeSize() {
-        this.brushWidth = this.sizePicker.value
+        this.colorPicker.parentElement.click();
     }
 
-
+    /** 
+     * Start recording drawing
+     */
     startDraw = (e) => {
         this.isDrawing = true;
         this.prevMouseX = e.offsetX;
         this.prevMouseY = e.offsetY;
-        this.draw_glob = [{ "x": this.prevMouseX, "y": this.prevMouseY, "color": this.selectedColor, "width": this.brushWidth }]
+        this.draw_glob = [{ "x": this.prevMouseX, "y": this.prevMouseY, "color": this.colorPicker.value, "width": this.sizePicker.value }]
 
         this.ctx.beginPath();
-        this.ctx.lineWidth = this.brushWidth;
-        this.ctx.strokeStyle = this.selectedColor;
-        this.ctx.fillStyle = this.selectedColor;
+        this.ctx.lineWidth = this.sizePicker.value;
+        this.ctx.strokeStyle = this.colorPicker.value;
+        this.ctx.fillStyle =  this.colorPicker.value;
         this.snapshot = this.ctx.getImageData(0, 0, this.canvas.width,
             this.canvas.height);
     }
 
+    /**
+     * Continue recording drawing
+     * @param {*} e 
+     *
+     */
     drawing = (e) => {
         if (!this.isDrawing) return;
         this.ctx.putImageData(this.snapshot, 0, 0);
@@ -94,17 +116,27 @@ export class Drawing {
         this.ctx.stroke();
     }
 
+    /**
+     * Stop recording drawing
+     * @param {*} e 
+     */
     stopDrawing = (e) => {
         this.socket.send(this.topic_id, JSON.stringify(this.draw_glob))
         this.isDrawing = false
         this.draw_glob = []
     }
 
+    /**
+     * reset the canvas to clear
+     */
     resetCanvasBackground = () => {
         this.ctx.fillStyle = "#fff";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "#fff";
     }
+    /**
+     * Parse each brush stroke recieved from the server
+     */
     streamDrawing(messages) {
         if (messages.length > 0) {
             for (var i in messages) {

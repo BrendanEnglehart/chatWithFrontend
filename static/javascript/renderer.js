@@ -270,3 +270,11 @@ async function loadSelf() {
 
 loadSelf()
 
+document.onkeydown=function(e){
+    let keycode =  e ? (e.which ? e.which : evt.keyCode) : e.keyCode;
+    if(topic_type != "drawing" && keycode == 13)
+    {
+        socket.send(topic_id, messageText.value)
+        messageText.value = ""
+    }
+}
