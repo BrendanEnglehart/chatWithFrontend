@@ -19,17 +19,22 @@ export class Drawing {
 
     initializeColorPicker() {
         this.colorPicker = document.getElementById("color-picker")
-        this.colorPicker.addEventListener("change", () => {
-            this.changeColor(this.colorPicker.value);
-            this.colorPicker.parentElement.click();
-        })
+        let colorPickerArea = document.getElementById("color-picker-area")
+        colorPickerArea.hidden = undefined
+        this.colorPicker.removeEventListener("change", this.changeColor())
+        this.colorPicker.addEventListener("change",
+            this.changeColor()
+        )
     }
 
     initializeSizePicker() {
         this.sizePicker = document.getElementById('size-picker')
-        this.sizePicker.addEventListener("change", () => {
-            this.changeSize(this.sizePicker.value)
-        })
+        let sizePickerArea = document.getElementById('brush-size-area')
+        sizePickerArea.hidden = undefined
+        this.sizePicker.removeEventListener("change", this.changeSize())
+        this.sizePicker.addEventListener("change",
+            this.changeSize()
+        )
     }
 
     constructor(newCanvas, socket, topic_id) {
@@ -58,11 +63,11 @@ export class Drawing {
         }
 
     }
-    changeColor(color) {
-        this.selectedColor = color
+    changeColor() {
+        this.selectedColor = this.colorPicker.value
     }
-    changeSize(size) {
-        this.brushWidth = size
+    changeSize() {
+        this.brushWidth = this.sizePicker.value
     }
 
 

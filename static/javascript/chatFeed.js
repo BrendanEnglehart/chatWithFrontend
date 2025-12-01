@@ -11,8 +11,8 @@ export class ChatFeed {
     constructor(chat) {
         this.chat = chat;
     }
-    colorTool = 'Color: <input type="color" value="#00FF00" name="" id="color-picker">'
-    sizeTool = 'Size: <input type="range" id="size-picker" min="1" max="30" value="5">'
+    colorTool = ''
+    sizeTool = ''
     repurposeFeed(newFeed) {
         this.chat.innerHTML = newFeed
     }
@@ -26,6 +26,10 @@ export class ChatFeed {
     }
     clear() {
         this.chat.innerHTML = ""
+        let colorPickerArea = document.getElementById("color-picker-area")
+        colorPickerArea.hidden = "clear"
+        let sizePickerArea = document.getElementById('brush-size-area')
+        sizePickerArea.hidden = "clear"
     }
     chatHTML(username, image, text) {
         return "<div class='grid grid-cols-2'>\
