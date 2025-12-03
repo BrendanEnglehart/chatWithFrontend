@@ -1,5 +1,5 @@
 # ChatWith
-The goal of ChatWith is to have an open source messaging application that is modular enought to allow different structures of communications without requiring too many third party tools or downloads.
+The goal of ChatWith is to have an open source messaging application that is modular enough to allow different structures of communications without requiring too many third party tools or downloads.
 
 Ideally every user will self host their own application and be able to implement their own methods by forking this branch and adding their own topic types. Currently topics aren't implemented and there is only the single chat thread available. 
 

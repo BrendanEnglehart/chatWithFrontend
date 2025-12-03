@@ -74,8 +74,13 @@
             </div>
 
             {% else %}
-            <h1>Welcome Guest</h1>
-            <p><a href="/login">Login</a></p>
+            <h1>Welcome, The goal of ChatWith is to have an <br>
+                open source messaging application that is modular <br>
+                enough to allow different structures of communications <br>
+                without requiring too many third party tools or downloads. <br>
+            UI is a distant concern until more features are finished, so for now it's just designed to be usable
+            </h1>
+            <p><button style="border-radius: 3px; padding: 5px; background-color: grey;" class="border-cyan-300 border-4"><a href="/login">Login</a></button></p>
             {% endif %}
         </div>
         <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js"
