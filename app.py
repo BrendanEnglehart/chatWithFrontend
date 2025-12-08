@@ -18,6 +18,8 @@ DEFAULT_TIMEOUT = (
     15  # default timeout for server requests. Most requests are less than a second.
 )
 
+LANDING_PAGE = "default_landing.html"
+
 app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 oauth = OAuth(app)
@@ -27,6 +29,9 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
     API_ENDPOINT = env.get("API_ENDPOINT")
+    if (env.get("CUSTOM_LANDING")):
+        LANDING_PAGE = env.get("CUSTOM_LANDING_PAGE")
+
     oauth.register(
         "auth0",
         client_id=env.get("AUTH0_CLIENT_ID"),
@@ -262,8 +267,15 @@ def get_categories():
 
     return ret.content
 
-
 @app.route("/")
+def default_landing():
+    """Default Landing page"""
+    if DEVELOPMENT_MODE:
+        return redirect("/chat")
+    return render_template(LANDING_PAGE)
+
+
+@app.route("/chat")
 def home():
     """Base Route"""
     if not DEVELOPMENT_MODE:
@@ -290,7 +302,7 @@ def callback():
     """Handle the return from the oauth"""
     token = oauth.auth0.authorize_access_token()
     session["user"] = token
-    return redirect("/")
+    return redirect("/chat")
 
 
 @app.route("/logout")
