@@ -18,7 +18,7 @@ let topic_type = "nothing"
 let topic_id = ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
-//global variabels wiht default values
+//global variabels with default values
 let brushWidth = 5,
     selectedColor = "#000";
 
@@ -221,6 +221,18 @@ newTopicSubmit.addEventListener('click', async () => {
         })
         .catch(error => console.error('Error:', error));
 })
+const showUserPanelButton = document.getElementById('showUserPanelButton')
+const hideUserPanelButton = document.getElementById('hideUserPanelButton')
+showUserPanelButton.onclick = function() { 
+    document.getElementById('userEdit').hidden = undefined;
+    document.getElementById('showUserPanel').hidden = "hidden";
+}
+
+hideUserPanelButton.onclick = function() { 
+    document.getElementById('showUserPanel').hidden = undefined;
+    document.getElementById('userEdit').hidden = "hidden";
+}
+
 
 
 const addCategoryButton = document.getElementById('addCategory')

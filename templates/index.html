@@ -43,9 +43,11 @@
                     </div>
                 </div>
                 <div id="middle" class="middle" class="">
-                    <div id="color-picker-area" hidden >Color: <input type="color" value="#00FF00" name="" id="color-picker"></div>
-                    <div id="brush-size-area" hidden >Size: <input type="range" id="size-picker" min="1" max="30" value="5"></div>
-                    
+                    <div id="color-picker-area" hidden>Color: <input type="color" value="#00FF00" name=""
+                            id="color-picker"></div>
+                    <div id="brush-size-area" hidden>Size: <input type="range" id="size-picker" min="1" max="30"
+                            value="5"></div>
+
                     <div id="chatChannel" class="chat"></div>
                     <div id="chatFeed" style="height:500px; overflow-y:auto"
                         class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread">
@@ -64,30 +66,51 @@
                             </svg>
                         </button>
                     </div>
-
-
-
-
+                </div>
+                <div class="right">
+                    <div id="userEdit" hidden>
+                        <div class="grid-cols-2" id="hideUserPanel">
+                            <button id="hideUserPanelButton"> >> </button> 
+                        </div>
+                        <div class="grid grid-cols-2">
+                            <div id="userEditArea">
+                                DisplayName:<input id="displayName" type="text">
+                                <button id="userDataSubmit" type="button"
+                                    class="inline-flex justify-center p-2 text-fg-brand rounded-full cursor-pointer hover:bg-brand-softer">
+                                    <svg class="w-6 h-6 rotate-90 rtl:-rotate-90" aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                        viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="m12 18-7 3 7-18 7 18-7-3Zm0 0v-5" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="showUserPanel">
+                        <button id="showUserPanelButton" value="Show User Edit"> Show User Panel</button>
+                    </div>
 
                 </div>
-
             </div>
+
 
             {% else %}
             <h1>Welcome, The goal of ChatWith is to have an <br>
                 open source messaging application that is modular <br>
                 enough to allow different structures of communications <br>
                 without requiring too many third party tools or downloads. <br>
-            UI is a distant concern until more features are finished, so for now it's just designed to be usable
+                UI is a distant concern until more features are finished, so for now it's just designed to be usable
             </h1>
-            <p><button style="border-radius: 3px; padding: 5px; background-color: grey;" class="border-cyan-300 border-4"><a href="/login">Login</a></button></p>
+            <p><button style="border-radius: 3px; padding: 5px; background-color: grey;"
+                    class="border-cyan-300 border-4"><a href="/login">Login</a></button></p>
             {% endif %}
         </div>
         <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.esm.min.js"
             integrity="sha384-MSs+BqXxw28ZIXyaZuFJkjeE6ACbqCIlyaQTt3nbXHfvbJ89vAdKFAXWt0EsCD4s"
             crossorigin="anonymous"></script>
-        <script type="module" src="../static/javascript/chatFeed.js"></script>    
-        <script type="module" src="../static/javascript/drawTopic.js"></script>    
+        <script type="module" src="../static/javascript/chatFeed.js"></script>
+        <script type="module" src="../static/javascript/drawTopic.js"></script>
         <script type="module" src="../static/javascript/renderer.js"></script>
 </body>
 

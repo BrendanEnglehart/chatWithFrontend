@@ -302,6 +302,15 @@ def callback():
     """Handle the return from the oauth"""
     token = oauth.auth0.authorize_access_token()
     session["user"] = token
+    id_token = session.get("user")["userinfo"]["sub"]
+    args = "/user/login"
+    external_requests.post(API_ENDPOINT + args, json={
+            "username": session.get("user")["userinfo"]["nickname"],
+            "picture": session.get("user")["userinfo"]["picture"],
+            "auth_id": id_token,
+            "email":  session.get("user")["userinfo"]["email"],
+        },
+        timeout=DEFAULT_TIMEOUT,)
     return redirect("/chat")
 
 
