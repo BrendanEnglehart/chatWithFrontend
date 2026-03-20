@@ -86,7 +86,6 @@ async function switchTopic(nextTopic) {
                     messages[message].username=user.username
                     messages[message].picture=user.picture
                 }
-                console.log(messages)
                 if (messages) {
                     chatFeed.streamMessages(messages)
                 }
