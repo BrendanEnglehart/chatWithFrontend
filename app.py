@@ -70,11 +70,12 @@ def handle_message(room, data):
 
     # On Reload, the room is stored in the session
     # otherwise, it isn't the source of truth
+    user_id = session.get("user_id")
     if room == "":
         room = session.get("topic")["_id"]
     message = (
         {
-            "username": session.get("user")["userinfo"]["nickname"],
+            "user_id" :  user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": room,
             "text": text,
@@ -83,7 +84,7 @@ def handle_message(room, data):
     ret = external_requests.post(
         API_ENDPOINT + "/message/" + room,
         json={
-            "username": session.get("user")["userinfo"]["nickname"],
+            "user_id" :  user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": room,
             "text": text,
@@ -101,10 +102,11 @@ def handle_message(room, data):
 def send_message():
     """Send the message written in the text block to the server"""
     text = request.get_json()["text"]
+    user_id = session.get("user_id")
     if DEVELOPMENT_MODE:
         dev_mode_chat_stack.append(
             {
-                "username": "test",
+                "user_id": "test",
                 "picture": "https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&amp;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
                 "topic": "general",
                 "text": text,
@@ -117,7 +119,7 @@ def send_message():
     ret = external_requests.post(
         API_ENDPOINT + "/message/" + topic["_id"],
         json={
-            "username": session.get("user")["userinfo"]["nickname"],
+            "user_id": user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": topic["_id"],
             "text": text,
@@ -264,8 +266,17 @@ def get_categories():
         return {"text": 200}
     args = "/category/category/"
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
-
     return ret.content
+
+@app.route("/users", methods=["get"])
+def get_all_users():
+    """Retrieve all Public Users"""
+    if DEVELOPMENT_MODE:
+        return {"text": 200}
+    args = "/user/list"
+    ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
+    return ret.content
+
 
 @app.route("/")
 def default_landing():
@@ -304,13 +315,15 @@ def callback():
     session["user"] = token
     id_token = session.get("user")["userinfo"]["sub"]
     args = "/user/login"
-    external_requests.post(API_ENDPOINT + args, json={
+    login_request = external_requests.post(API_ENDPOINT + args, json={
             "username": session.get("user")["userinfo"]["nickname"],
             "picture": session.get("user")["userinfo"]["picture"],
             "auth_id": id_token,
             "email":  session.get("user")["userinfo"]["email"],
         },
         timeout=DEFAULT_TIMEOUT,)
+    data = json.loads(login_request.content)
+    session["user_id"] = data["_id"]
     return redirect("/chat")
 
 

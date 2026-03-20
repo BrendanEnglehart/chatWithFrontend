@@ -14,6 +14,7 @@ let drawing;
 let isDrawing = false
 let category_cache = []
 let topic_cache = []
+let user_list = {}
 let topic_type = "nothing"
 let topic_id = ""
 // We are all brendan on this blessed day
@@ -31,8 +32,26 @@ function parseMessage(username, image, text) {
     }
 }
 
-socket.on('message', (data) => {
-    parseMessage(data.username, data.picture, data.text)
+async function getUser(user_id){
+    if (!Object.values(user_list).includes(user_id) || user_list[user_id] == undefined){
+        await fetch("/users").then(response => response.json()).then(data => {
+            let users = data.users
+            for (let user in users){
+                user_list[users[user]._id] = users[user]
+            }
+            return user_list[user_id]
+        })
+    }
+    else {
+                   return user_list[user_id]
+    }
+
+}
+
+socket.on('message', async (data) => {
+    await getUser(data.user_id)
+    let user =user_list[data.user_id]
+    parseMessage(user.username, user.picture, data.text)
 });
 
 // This should be called load Topic, or something smarter, right now it's not that great
@@ -57,10 +76,17 @@ async function switchTopic(nextTopic) {
     }
     else if (topic_type == "chat" || topic_type == "general") {
         await fetch("/stream").then(response => response.json())
-            .then(data => {
+            .then(async data => {
                 newMessageArea.hidden = undefined
                 let messages = data.messages
                 chatFeed.clear()
+                for (let message in messages) { 
+                    let user =  await getUser(messages[message].user_id)
+                    user = user_list[messages[message].user_id]
+                    messages[message].username=user.username
+                    messages[message].picture=user.picture
+                }
+                console.log(messages)
                 if (messages) {
                     chatFeed.streamMessages(messages)
                 }
