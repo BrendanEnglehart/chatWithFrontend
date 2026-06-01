@@ -263,7 +263,6 @@ def update_username():
     """Update Username"""
     if DEVELOPMENT_MODE:
         return {"text": 200}
-    print(request.get_json())
     username = request.get_json()["userName"]
     id_token = session.get("user")["userinfo"]["sub"]
     return external_requests.post(API_ENDPOINT + "/user/update_username", json={
@@ -271,7 +270,7 @@ def update_username():
         "username": username,
         "email" :"",
         "picture" : ""
-    }, timeout=DEFAULT_TIMEOUT)
+    }, timeout=DEFAULT_TIMEOUT).content
     
 
     
