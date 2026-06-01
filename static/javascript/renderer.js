@@ -259,6 +259,23 @@ hideUserPanelButton.onclick = function() {
 }
 
 
+const userDataUpdateButton = document.getElementById('updateUserDataButton')
+userDataUpdateButton.onclick = async function () {
+    displayName = document.getElementById('displayName').value;
+    await fetch("/update_username", {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json', 
+            'Accept': 'application/json', 
+        },
+        body: JSON.stringify({ userName: displayName })
+    }).then()
+        .then(data => {
+            document.getElementById('displayName').value = ""
+        }
+        )
+
+}
 
 const addCategoryButton = document.getElementById('addCategory')
 const newCategorySubmit = document.getElementById('newCategorySubmit')
@@ -278,10 +295,10 @@ newCategorySubmit.addEventListener('click', async () => {
     let name = newCategoryName.value
     document.getElementById('newCategoryForm').hidden = "yes"
     await fetch("/new_category", {
-        method: 'POST', // Specify the method as POST
+        method: 'POST', 
         headers: {
-            'Content-Type': 'application/json', // Indicate that the body is JSON
-            'Accept': 'application/json', // Specify the expected response type
+            'Content-Type': 'application/json', 
+            'Accept': 'application/json', 
         },
         body: JSON.stringify({ name: name })
     }).then(response => response.json())

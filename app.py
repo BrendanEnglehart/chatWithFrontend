@@ -258,6 +258,23 @@ def get_topics():
     ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
     return ret.content
 
+@app.route("/update_username", methods=["post"])
+def update_username():
+    """Update Username"""
+    if DEVELOPMENT_MODE:
+        return {"text": 200}
+    print(request.get_json())
+    username = request.get_json()["userName"]
+    id_token = session.get("user")["userinfo"]["sub"]
+    return external_requests.post(API_ENDPOINT + "/user/update_username", json={
+        "_id" : id_token,
+        "username": username,
+        "email" :"",
+        "picture" : ""
+    }, timeout=DEFAULT_TIMEOUT)
+    
+
+    
 
 @app.route("/category", methods=["get"])
 def get_categories():
