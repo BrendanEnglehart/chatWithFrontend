@@ -3,3 +3,4 @@
 .venv
 node_modules
 custom_static_site
+custom_javascript
