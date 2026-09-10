@@ -10,27 +10,34 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, redirect, render_template, session, url_for, request
 from flask_socketio import join_room, leave_room, SocketIO, emit
+from routes.basic_functions import BasicBlueprint
 
-
-DEVELOPMENT_MODE = False
 ENV_FILE = find_dotenv()
-DEFAULT_TIMEOUT = (
-    15  # default timeout for server requests. Most requests are less than a second.
-)
 
 LANDING_PAGE = "default_landing.html"
 
 app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["DEVELOPMENT_MODE"] = False
+app.config["DEFAULT_TIMEOUT"] = (
+    15  # default timeout for server requests. Most requests are less than a second.
+)
+app.register_blueprint(BasicBlueprint)
 oauth = OAuth(app)
 socketio = SocketIO()
-API_ENDPOINT = "http://127.0.0.1:5001"
+app.config["API_ENDPOINT"] = "http://127.0.0.1:5001"
 if ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
-    API_ENDPOINT = env.get("API_ENDPOINT")
-    if (env.get("CUSTOM_LANDING")):
+    app.config["API_ENDPOINT"] = env.get("API_ENDPOINT")
+    if env.get("CUSTOM_LANDING"):
         LANDING_PAGE = env.get("CUSTOM_LANDING_PAGE")
+    if env.get("CUSTOM_ROUTES"):
+        try:
+            from custom_routes.custom_routes import CustomBlueprint
+            app.register_blueprint(CustomBlueprint)
+        except ImportError as exc:
+            raise ImportError("Failed to import Custom Routes") from exc
 
     oauth.register(
         "auth0",
@@ -42,7 +49,7 @@ if ENV_FILE:
         server_metadata_url=f'https://{env.get("AUTH0_DOMAIN")}/.well-known/openid-configuration',
     )
 else:
-    DEVELOPMENT_MODE = True
+    app.config["DEVELOPMENT_MODE"] = True
     dev_mode_chat_stack = []
 
 
@@ -51,7 +58,7 @@ def handle_message(room, data):
     """Socket Handler for message sending"""
 
     text = data
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         emit(
             "message",
             {
@@ -82,14 +89,14 @@ def handle_message(room, data):
         },
     )
     ret = external_requests.post(
-        API_ENDPOINT + "/message/" + room,
+        app.config["API_ENDPOINT"] + "/message/" + room,
         json={
             "user_id" :  user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": room,
             "text": text,
         },
-        timeout=DEFAULT_TIMEOUT,
+        timeout=app.config["DEFAULT_TIMEOUT"],
     )
     emit("message", message, json=True, to=room, include_self=True)
     if ret.ok:
@@ -103,7 +110,7 @@ def send_message():
     """Send the message written in the text block to the server"""
     text = request.get_json()["text"]
     user_id = session.get("user_id")
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         dev_mode_chat_stack.append(
             {
                 "user_id": "test",
@@ -117,14 +124,14 @@ def send_message():
     topic = session.get("topic")
 
     ret = external_requests.post(
-        API_ENDPOINT + "/message/" + topic["_id"],
+        app.config["API_ENDPOINT"] + "/message/" + topic["_id"],
         json={
             "user_id": user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": topic["_id"],
             "text": text,
         },
-        timeout=DEFAULT_TIMEOUT,
+        timeout=app.config["DEFAULT_TIMEOUT"],
     )
     if ret.ok:
         pass # Changing out print message for something else
@@ -136,69 +143,23 @@ def send_message():
 @app.route("/switch_category", methods=["post"])
 def switch_category():
     """This is called on the category switch, as noted elsewhere, this will be refactored"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         return {"text": 200}
     category_id = request.get_json()["category_id"]
     session["category"] = category_id
     session.update()
     return {"text": 200}
 
-
-@app.route("/switch_topic", methods=["post"])
-def switch_topic():
-    """Switch The topic the user is subscribing to"""
-    if DEVELOPMENT_MODE:
-        return {"text": 200}
-    topic = request.get_json()
-    session["topic"] = topic
-    session.update()
-    session["stream_latest"] = datetime.datetime.min
-    session.update()
-    return {"text": 200}
-
-
-@app.route("/new_topic", methods=["post"])
-def new_topic():
-    """Create a new topic"""
-    if DEVELOPMENT_MODE:
-        return {}
-    topic_name = request.get_json()["name"]
-    topic_type = request.get_json()["topic_type"]
-    return external_requests.post(
-        API_ENDPOINT + "/topic/",
-        json={
-            "category_id": session.get("category"),
-            "name": topic_name,
-            "type": topic_type,
-            "metadata": "",
-        },
-        timeout=DEFAULT_TIMEOUT,
-    ).content
-
-
-@app.route("/new_category", methods=["post"])
-def new_category():
-    """Create a new category"""
-    if DEVELOPMENT_MODE:
-        return {}
-    category_name = request.get_json()["name"]
-    return external_requests.post(
-        API_ENDPOINT + "/category/category/",
-        json={"name": category_name, "joinable": True},
-        timeout=DEFAULT_TIMEOUT,
-    ).content
-
-
 @app.route("/load_self", methods=["get"])
 def load_self():
     """On initial page load, acquire current configuration"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         return {"response":200}
     topic = session.get("topic")
 
     if topic is None or topic == "":
         topic = external_requests.get(
-            API_ENDPOINT + "/landing/generalLanding", timeout=DEFAULT_TIMEOUT
+            app.config["API_ENDPOINT"] + "/landing/generalLanding", timeout=app.config["DEFAULT_TIMEOUT"]
         ).json()
         session["topic"] = topic
         session["category"] = topic["category_id"]
@@ -211,7 +172,7 @@ def load_self():
 @app.route("/stream", methods=["get"])
 def stream():
     """Stream the chat feed"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         global dev_mode_chat_stack  # pylint: disable=global-statement
         ret = copy.deepcopy(dev_mode_chat_stack)
         dev_mode_chat_stack = []
@@ -221,7 +182,7 @@ def stream():
 
     if topic is None or topic == "":
         topic = external_requests.get(
-            API_ENDPOINT + "/landing/generalLanding", timeout=DEFAULT_TIMEOUT
+            app.config["API_ENDPOINT"] + "/landing/generalLanding", timeout=app.config["DEFAULT_TIMEOUT"]
         ).json()
         session["topic"] = topic
         session["category"] = topic["category_id"]
@@ -232,7 +193,7 @@ def stream():
     session["stream_latest"] = datetime.datetime.now()
     session.update()
     args = f"/message/stream/topic={topic['_id']}&time={time}"
-    ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
+    ret = external_requests.get(app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"])
     if ret.ok:
         pass # Changing out print message
     else:
@@ -241,63 +202,49 @@ def stream():
     return ret.content
 
 
-@app.route("/topic", methods=["get"])
-def get_topics():
-    """Get the Topics in the Category"""
-    if DEVELOPMENT_MODE:
+@app.route("/switch_topic", methods=["post"])
+def switch_topic():
+    """Switch The topic the user is subscribing to"""
+    if app.config["DEVELOPMENT_MODE"]:
         return {"text": 200}
-    if session.get("category") is None:
-        topic = external_requests.get(
-            API_ENDPOINT + "/landing/generalLanding", timeout=DEFAULT_TIMEOUT
-        ).json()
-        session["topic"] = topic
-        session["category"] = topic["category_id"]
-        session.update()
-
-    args = "/topic/" + session.get("category")
-    ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
-    return ret.content
+    topic = request.get_json()
+    session["topic"] = topic
+    session.update()
+    session["stream_latest"] = datetime.datetime.min
+    session.update()
+    return {"text": 200}
 
 @app.route("/update_username", methods=["post"])
 def update_username():
     """Update Username"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         return {"text": 200}
     username = request.get_json()["userName"]
     id_token = session.get("user")["userinfo"]["sub"]
-    return external_requests.post(API_ENDPOINT + "/user/update_username", json={
+    return external_requests.post(app.config["API_ENDPOINT"] + "/user/update_username", json={
         "_id" : id_token,
         "username": username,
         "email" :"",
         "picture" : ""
-    }, timeout=DEFAULT_TIMEOUT).content
+    }, timeout=app.config["DEFAULT_TIMEOUT"]).content
     
-
-    
-
-@app.route("/category", methods=["get"])
-def get_categories():
-    """Retrieve all Public Categories"""
-    if DEVELOPMENT_MODE:
-        return {"text": 200}
-    args = "/category/category/"
-    ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
-    return ret.content
-
 @app.route("/users", methods=["get"])
 def get_all_users():
     """Retrieve all Public Users"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         return {"text": 200}
     args = "/user/list"
-    ret = external_requests.get(API_ENDPOINT + args, timeout=DEFAULT_TIMEOUT)
+    ret = external_requests.get(app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"])
     return ret.content
+    
+
+
 
 
 @app.route("/")
 def default_landing():
     """Default Landing page"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         return redirect("/chat")
     return render_template(LANDING_PAGE)
 
@@ -305,7 +252,7 @@ def default_landing():
 @app.route("/chat")
 def home():
     """Base Route"""
-    if not DEVELOPMENT_MODE:
+    if not app.config["DEVELOPMENT_MODE"]:
         session["stream_latest"] = datetime.datetime.min
         return render_template(
             "index.html",
@@ -313,7 +260,7 @@ def home():
             pretty=json.dumps(session.get("user"), indent=4),
         )
     else:
-        return render_template("index.html", session=DEVELOPMENT_MODE)
+        return render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
 
 
 @app.route("/login")
@@ -327,19 +274,22 @@ def login():
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     """Handle the return from the oauth"""
-    token = oauth.auth0.authorize_access_token()
-    session["user"] = token
-    id_token = session.get("user")["userinfo"]["sub"]
-    args = "/user/login"
-    login_request = external_requests.post(API_ENDPOINT + args, json={
-            "username": session.get("user")["userinfo"]["nickname"],
-            "picture": session.get("user")["userinfo"]["picture"],
-            "auth_id": id_token,
-            "email":  session.get("user")["userinfo"]["email"],
-        },
-        timeout=DEFAULT_TIMEOUT,)
-    data = json.loads(login_request.content)
-    session["user_id"] = data["_id"]
+    try:
+        token = oauth.auth0.authorize_access_token()
+        session["user"] = token
+        id_token = session.get("user")["userinfo"]["sub"]
+        args = "/user/login"
+        login_request = external_requests.post(app.config["API_ENDPOINT"] + args, json={
+                "username": session.get("user")["userinfo"]["nickname"],
+                "picture": session.get("user")["userinfo"]["picture"],
+                "auth_id": id_token,
+                "email":  session.get("user")["userinfo"]["email"],
+            },
+            timeout=app.config["DEFAULT_TIMEOUT"],)
+        data = json.loads(login_request.content)
+        session["user_id"] = data["_id"]
+    except Exception as e:
+        app.logger.error(e)
     return redirect("/chat")
 
 
@@ -364,7 +314,7 @@ def logout():
 @socketio.on("join")
 def on_join(topic_id):
     """User Joins a topic"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         join_room("general")
         return
 
@@ -373,7 +323,7 @@ def on_join(topic_id):
 @socketio.on("joinSession")
 def on_join_session():
     """User Joins a topic"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         join_room("general")
         return
     topic = session.get("topic")
@@ -383,7 +333,7 @@ def on_join_session():
 @socketio.on("leave")
 def on_leave(topic_id):
     """User leaves a topic"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         leave_room("general")
         return
     leave_room(topic_id)
@@ -392,7 +342,7 @@ def on_leave(topic_id):
 @socketio.on("leaveSession")
 def on_leave_session():
     """User leaves a topic"""
-    if DEVELOPMENT_MODE:
+    if app.config["DEVELOPMENT_MODE"]:
         leave_room("general")
         return
 

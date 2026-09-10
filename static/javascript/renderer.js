@@ -83,9 +83,10 @@ async function switchTopic(nextTopic) {
                 for (let message in messages) { 
                     let user =  await getUser(messages[message].user_id)
                     user = user_list[messages[message].user_id]
-                    messages[message].username=user.username
-                    messages[message].picture=user.picture
-                }
+                    if (user != null){
+                        messages[message].username=user.username
+                        messages[message].picture=user.picture
+                    }}
                 if (messages) {
                     chatFeed.streamMessages(messages)
                 }
