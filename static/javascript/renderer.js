@@ -21,7 +21,8 @@ let topic_id = ""
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
 function parseMessage(username, image, text) {
     if (topic_type == "drawing") {
-        drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
+        if (JSON.parse(text)[0]!== undefined)
+            drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
     }
     if (topic_type == "chat" || topic_type == "general") {
         chatFeed.parseMessage(username, image, text)
