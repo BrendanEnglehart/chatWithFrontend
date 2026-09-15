@@ -19,10 +19,6 @@ let topic_type = "nothing"
 let topic_id = ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
-//global variabels with default values
-let brushWidth = 5,
-    selectedColor = "#000";
-
 function parseMessage(username, image, text) {
     if (topic_type == "drawing") {
         drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
@@ -83,10 +79,11 @@ async function switchTopic(nextTopic) {
                 for (let message in messages) { 
                     let user =  await getUser(messages[message].user_id)
                     user = user_list[messages[message].user_id]
-                    if (user != null){
+                    if (user != null){ // Deleting a user doesn't delete any of their messages
                         messages[message].username=user.username
                         messages[message].picture=user.picture
-                    }}
+                    }
+                }
                 if (messages) {
                     chatFeed.streamMessages(messages)
                 }
@@ -252,11 +249,53 @@ const hideUserPanelButton = document.getElementById('hideUserPanelButton')
 showUserPanelButton.onclick = function() { 
     document.getElementById('userEdit').hidden = undefined;
     document.getElementById('showUserPanel').hidden = "hidden";
+    
 }
 
 hideUserPanelButton.onclick = function() { 
     document.getElementById('showUserPanel').hidden = undefined;
     document.getElementById('userEdit').hidden = "hidden";
+}
+
+const makeFullscreenButton = document.getElementById('make_fullscreen')
+const unmakeFullscreenButton = document.getElementById('unmake_fullscreen')
+
+makeFullscreenButton.onclick = async function () {
+    makeFullscreenButton.hidden="true"
+    document.getElementById('left').hidden="true"
+    document.getElementById('right-sidebar').hidden="true"
+    drawing.resize(1000,800)
+    drawing.resetCanvasBackground()
+    await fetch("/restream").then(response=>{   
+        fetch("/stream").then(response => response.json())
+            .then(data => {
+                let messages = data.messages
+                if (messages) {
+                    drawing.streamDrawing(messages)
+                }
+            unmakeFullscreenButton.hidden=null
+
+            })
+        })
+}
+
+unmakeFullscreenButton.onclick = async function () {
+    unmakeFullscreenButton.hidden="true"
+    document.getElementById('left').hidden=null
+    document.getElementById('right-sidebar').hidden=null
+    drawing.resize(500,500)
+    drawing.resetCanvasBackground()
+    await fetch("/restream").then(response=>{   
+        fetch("/stream").then(response => response.json())
+            .then(data => {
+                let messages = data.messages
+                if (messages) {
+                    drawing.streamDrawing(messages)
+                }
+            makeFullscreenButton.hidden=null
+
+            })
+        })
 }
 
 

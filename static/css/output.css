@@ -106,9 +106,14 @@
     font-variation-settings: inherit;
     letter-spacing: inherit;
     color: inherit;
-    border-radius: 0;
-    background-color: transparent;
-    opacity: 1;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    background-color: rgb(7, 7, 7);
+    border-style: ridge;
+    margin-left: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    opacity: .7;
   }
   :where(select:is([multiple], [size])) optgroup {
     font-weight: bolder;
@@ -132,6 +137,7 @@
   }
   textarea {
     resize: vertical;
+    background-color: rgb(59, 34, 31);
   }
   ::-webkit-search-decoration {
     -webkit-appearance: none;

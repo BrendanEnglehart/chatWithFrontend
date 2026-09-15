@@ -17,8 +17,8 @@
             <div id="mainBody">
                 <div class="grid grid-cols-3">
                     
-                    <div id="left" class="grid h-full w-15">
-                        <div id="Topics" style="height:250px; overflow-y:auto">
+                    <div id="left" class="left grid h-full col-span-1" style="width: 10dvw;">
+                        <div id="Topics" style="height:250px;overflow-y:auto">
                             <h1>Topics <button id="addTopic">+</button></h1>
                             <div id="newTopicForm" hidden>
                                 <label for="newTopicName">Topic Name:</label>
@@ -50,19 +50,22 @@
                         </div>
                     </div>
 
-                    <div id="middle" class="middle">
+                    <div id="middle" class="col-span-4"  style="width:75dvw;">
                         <div id="color-picker-area" hidden>
                             Color: <input id="color-picker" type="color" value="#00FF00">
+                            <button id="make_fullscreen">Fullscreen</button>
+                            <button id="unmake_fullscreen" hidden>Shrink</button>
                         </div>
                         <div id="brush-size-area" hidden>
                             Size: <input id="size-picker" type="range" min="1" max="30" value="5">
                         </div>
+                    
 
                         <div id="chatChannel" class="chat"></div>
                         
                         <div id="chatFeed" 
                              class="h-20 flex-col grid-cols-1 items-center scroll-smooth chat-thread" 
-                             style="height:500px; overflow-y:auto">
+                             style="height:80dvh; overflow-y:auto">
                         </div>
 
                         <div id="newMessageArea" class="p-4  dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
@@ -79,7 +82,7 @@
                     </div>
                     </div>
 
-                    <aside id="right-sidebar" class="col-span-12 lg:col-span-3">
+                    <aside id="right-sidebar" class="col-span-1 lg:col-span-1">
                     <div class=" dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 h-full">
                         <div id="userEdit" hidden>
                             <div class="flex items-center justify-between mb-6">

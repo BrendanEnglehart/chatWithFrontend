@@ -2,7 +2,6 @@
 
 import datetime
 import json
-import copy
 from os import environ as env
 from urllib.parse import quote_plus, urlencode
 import requests as external_requests
@@ -25,6 +24,7 @@ app.config["DEFAULT_TIMEOUT"] = (
 app.register_blueprint(BasicBlueprint)
 oauth = OAuth(app)
 socketio = SocketIO()
+
 app.config["API_ENDPOINT"] = "http://127.0.0.1:5001"
 if ENV_FILE:
     load_dotenv(ENV_FILE)
@@ -35,6 +35,7 @@ if ENV_FILE:
     if env.get("CUSTOM_ROUTES"):
         try:
             from custom_routes.custom_routes import CustomBlueprint
+
             app.register_blueprint(CustomBlueprint)
         except ImportError as exc:
             raise ImportError("Failed to import Custom Routes") from exc
@@ -50,7 +51,7 @@ if ENV_FILE:
     )
 else:
     app.config["DEVELOPMENT_MODE"] = True
-    dev_mode_chat_stack = []
+    app.config["DEV_MODE_CHAT_STACK"] = []
 
 
 @socketio.on("message")
@@ -82,7 +83,7 @@ def handle_message(room, data):
         room = session.get("topic")["_id"]
     message = (
         {
-            "user_id" :  user_id,
+            "user_id": user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": room,
             "text": text,
@@ -91,7 +92,7 @@ def handle_message(room, data):
     ret = external_requests.post(
         app.config["API_ENDPOINT"] + "/message/" + room,
         json={
-            "user_id" :  user_id,
+            "user_id": user_id,
             "picture": session.get("user")["userinfo"]["picture"],
             "topic": room,
             "text": text,
@@ -111,7 +112,7 @@ def send_message():
     text = request.get_json()["text"]
     user_id = session.get("user_id")
     if app.config["DEVELOPMENT_MODE"]:
-        dev_mode_chat_stack.append(
+        app.config["DEV_MODE_CHAT_STACK"].append(
             {
                 "user_id": "test",
                 "picture": "https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&amp;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
@@ -134,111 +135,10 @@ def send_message():
         timeout=app.config["DEFAULT_TIMEOUT"],
     )
     if ret.ok:
-        pass # Changing out print message for something else
+        pass  # Changing out print message for something else
     else:
         app.logger.error(ret.raise_for_status())
     return ret.content
-
-
-@app.route("/switch_category", methods=["post"])
-def switch_category():
-    """This is called on the category switch, as noted elsewhere, this will be refactored"""
-    if app.config["DEVELOPMENT_MODE"]:
-        return {"text": 200}
-    category_id = request.get_json()["category_id"]
-    session["category"] = category_id
-    session.update()
-    return {"text": 200}
-
-@app.route("/load_self", methods=["get"])
-def load_self():
-    """On initial page load, acquire current configuration"""
-    if app.config["DEVELOPMENT_MODE"]:
-        return {"response":200}
-    topic = session.get("topic")
-
-    if topic is None or topic == "":
-        topic = external_requests.get(
-            app.config["API_ENDPOINT"] + "/landing/generalLanding", timeout=app.config["DEFAULT_TIMEOUT"]
-        ).json()
-        session["topic"] = topic
-        session["category"] = topic["category_id"]
-
-    session["stream_latest"] = datetime.datetime.min
-    session.update()
-    return topic
-
-# Deprecate me
-@app.route("/stream", methods=["get"])
-def stream():
-    """Stream the chat feed"""
-    if app.config["DEVELOPMENT_MODE"]:
-        global dev_mode_chat_stack  # pylint: disable=global-statement
-        ret = copy.deepcopy(dev_mode_chat_stack)
-        dev_mode_chat_stack = []
-        return {"messages": ret}
-
-    topic = session.get("topic")
-
-    if topic is None or topic == "":
-        topic = external_requests.get(
-            app.config["API_ENDPOINT"] + "/landing/generalLanding", timeout=app.config["DEFAULT_TIMEOUT"]
-        ).json()
-        session["topic"] = topic
-        session["category"] = topic["category_id"]
-
-    time = session.get("stream_latest")
-    if time is None:
-        time = datetime.datetime.min
-    session["stream_latest"] = datetime.datetime.now()
-    session.update()
-    args = f"/message/stream/topic={topic['_id']}&time={time}"
-    ret = external_requests.get(app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"])
-    if ret.ok:
-        pass # Changing out print message
-    else:
-        app.logger.error(ret.raise_for_status())
-
-    return ret.content
-
-
-@app.route("/switch_topic", methods=["post"])
-def switch_topic():
-    """Switch The topic the user is subscribing to"""
-    if app.config["DEVELOPMENT_MODE"]:
-        return {"text": 200}
-    topic = request.get_json()
-    session["topic"] = topic
-    session.update()
-    session["stream_latest"] = datetime.datetime.min
-    session.update()
-    return {"text": 200}
-
-@app.route("/update_username", methods=["post"])
-def update_username():
-    """Update Username"""
-    if app.config["DEVELOPMENT_MODE"]:
-        return {"text": 200}
-    username = request.get_json()["userName"]
-    id_token = session.get("user")["userinfo"]["sub"]
-    return external_requests.post(app.config["API_ENDPOINT"] + "/user/update_username", json={
-        "_id" : id_token,
-        "username": username,
-        "email" :"",
-        "picture" : ""
-    }, timeout=app.config["DEFAULT_TIMEOUT"]).content
-    
-@app.route("/users", methods=["get"])
-def get_all_users():
-    """Retrieve all Public Users"""
-    if app.config["DEVELOPMENT_MODE"]:
-        return {"text": 200}
-    args = "/user/list"
-    ret = external_requests.get(app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"])
-    return ret.content
-    
-
-
 
 
 @app.route("/")
@@ -259,8 +159,7 @@ def home():
             session=session.get("user"),
             pretty=json.dumps(session.get("user"), indent=4),
         )
-    else:
-        return render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
+    render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
 
 
 @app.route("/login")
@@ -279,13 +178,16 @@ def callback():
         session["user"] = token
         id_token = session.get("user")["userinfo"]["sub"]
         args = "/user/login"
-        login_request = external_requests.post(app.config["API_ENDPOINT"] + args, json={
+        login_request = external_requests.post(
+            app.config["API_ENDPOINT"] + args,
+            json={
                 "username": session.get("user")["userinfo"]["nickname"],
                 "picture": session.get("user")["userinfo"]["picture"],
                 "auth_id": id_token,
-                "email":  session.get("user")["userinfo"]["email"],
+                "email": session.get("user")["userinfo"]["email"],
             },
-            timeout=app.config["DEFAULT_TIMEOUT"],)
+            timeout=app.config["DEFAULT_TIMEOUT"],
+        )
         data = json.loads(login_request.content)
         session["user_id"] = data["_id"]
     except Exception as e:
@@ -320,6 +222,7 @@ def on_join(topic_id):
 
     join_room(topic_id)
 
+
 @socketio.on("joinSession")
 def on_join_session():
     """User Joins a topic"""
@@ -329,6 +232,7 @@ def on_join_session():
     topic = session.get("topic")
 
     join_room(topic["_id"])
+
 
 @socketio.on("leave")
 def on_leave(topic_id):

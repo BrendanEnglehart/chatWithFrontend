@@ -16,6 +16,8 @@ export class Drawing {
     topic_id;
     sizePicker;
     colorPicker;
+    canvas_width=500;
+    canvas_height=500;
 
     /**
      * Initialize the Color Picker Area
@@ -46,6 +48,8 @@ export class Drawing {
     constructor(newCanvas, socket, topic_id) {
         this.canvas = newCanvas
         this.ctx = this.canvas.getContext("2d");
+        this.canvas.width = this.canvas_width
+        this.canvas.height = this.canvas_height
         this.canvas.addEventListener("mousedown", this.startDraw);
         this.canvas.addEventListener("mousemove", this.drawing);
         this.canvas.addEventListener("mouseup", this.stopDrawing);
@@ -75,6 +79,11 @@ export class Drawing {
             this.ctx.stroke();
         }
 
+    }
+
+    resize(width, height) {
+        this.canvas.width=width
+        this.canvas.height=height
     }
 
     /**
