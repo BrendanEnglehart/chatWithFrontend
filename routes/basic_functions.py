@@ -157,7 +157,7 @@ def stream():
     """Stream the chat feed"""
     if app.config["DEVELOPMENT_MODE"]:
         app.config["DEV_MODE_CHAT_STACK"] = []
-        return {"messages": ret}
+        return {"messages": app.config["DEV_MODE_CHAT_STACK"]}
 
     topic = session.get("topic")
 
