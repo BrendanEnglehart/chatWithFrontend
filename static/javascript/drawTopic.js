@@ -53,6 +53,10 @@ export class Drawing {
         this.canvas.addEventListener("mousedown", this.startDraw);
         this.canvas.addEventListener("mousemove", this.drawing);
         this.canvas.addEventListener("mouseup", this.stopDrawing);
+        this.canvas.addEventListener("mouseleave", this.stopDrawing);
+        this.canvas.addEventListener("touchstart", this.startDraw);
+        this.canvas.addEventListener("touchmove", this.drawing);
+        this.canvas.addEventListener("touchend", this.stopDrawing);
         this.socket = socket
         this.resetCanvasBackground()
         this.topic_id = topic_id
@@ -98,6 +102,7 @@ export class Drawing {
      * Start recording drawing
      */
     startDraw = (e) => {
+        e.preventDefault();
         this.isDrawing = true;
         this.prevMouseX = e.offsetX;
         this.prevMouseY = e.offsetY;
@@ -117,6 +122,7 @@ export class Drawing {
      *
      */
     drawing = (e) => {
+        e.preventDefault();
         if (!this.isDrawing) return;
         this.ctx.putImageData(this.snapshot, 0, 0);
         this.draw_glob.push({ "x": e.offsetX, "y": e.offsetY })
@@ -130,6 +136,7 @@ export class Drawing {
      * @param {*} e 
      */
     stopDrawing = (e) => {
+
         this.socket.send(this.topic_id, JSON.stringify(this.draw_glob))
         this.isDrawing = false
         this.draw_glob = []

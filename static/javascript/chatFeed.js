@@ -27,7 +27,7 @@ export class ChatFeed {
      * Prepares the default canvas for drawing
      */
     repurposeFeedForDrawing() {
-        this.repurposeFeed( "<canvas id=\"Drawing\" width=\"500\" height=\"500\"></canvas>")
+        this.repurposeFeed( "<canvas id=\"Drawing\" width=\"500\" height=\"500\" style=\"touch-action: none;\"></canvas>")
     }
 
     /**
