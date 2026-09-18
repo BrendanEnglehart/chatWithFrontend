@@ -21,6 +21,11 @@ def get_categories():
     )
     return ret.content
 
+@BasicBlueprint.route("/current_user", methods=["get"])
+def get_current_user_id():
+    """Retrieve the current user id if available"""
+    return { "user_id" : session.get("user_id")}
+
 
 @BasicBlueprint.route("/restream", methods=["get"])
 def restream():
@@ -78,6 +83,18 @@ def new_category():
     return external_requests.post(
         app.config["API_ENDPOINT"] + "/category/category/",
         json={"name": category_name, "joinable": True},
+        timeout=app.config["DEFAULT_TIMEOUT"],
+    ).content
+
+@BasicBlueprint.route("/delete_message", methods=["post"])
+def delete_message():
+    """delete message"""
+    if app.config["DEVELOPMENT_MODE"]:
+        return {}
+    message_id = request.get_json()["message_id"]
+    return external_requests.post(
+        app.config["API_ENDPOINT"] + "/message/delete/message",
+        json={"_id": message_id, "user_id": session.get("user_id")},
         timeout=app.config["DEFAULT_TIMEOUT"],
     ).content
 

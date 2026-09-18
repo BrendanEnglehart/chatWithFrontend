@@ -213,6 +213,8 @@ def logout():
     )
 
 
+
+
 @socketio.on("join")
 def on_join(topic_id):
     """User Joins a topic"""

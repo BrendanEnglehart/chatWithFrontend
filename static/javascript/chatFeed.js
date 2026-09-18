@@ -38,9 +38,24 @@ export class ChatFeed {
      * @param {*} image 
      * @param {*} text 
      */
-    parseMessage(username, image, text) {
-        this.chat.innerHTML += this.chatHTML(username, image, text)
+    parseMessage(username, image, text, message_id) {
+        this.chat.innerHTML += this.chatHTML(username, image, text, message_id)
     }
+
+
+
+    /**
+     * Parse a message to add to the feed
+     * This should only contain the render side
+     * 
+     * @param {*} username 
+     * @param {*} image 
+     * @param {*} text 
+     */
+    parseOwnedMessage(username, image, text, message_id) {
+        this.chat.innerHTML += this.ownedChatHTML(username, image, text, message_id)
+    }
+
 
     /**
      * Clear the feed to prepare it for another purpose
@@ -64,21 +79,30 @@ export class ChatFeed {
  * @param {*} text 
  * @returns 
  */
-    chatHTML(username, image, text) {
-        return "<div class='grid grid-cols-2'>\
+    chatHTML(username, image, text, message_id) {
+        return "<div id=\'"+message_id+"\' class='grid grid-cols-2'>\
           <div><img src='"+ image + "' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
           <div class='grid grid-cols-1'><strong>"+ username + "</strong> <span>" + text + "</span></div>\
         </div></br>";
     }
+    ownedChatHTML(username, image, text, message_id) {
+    return "<div id=\'"+message_id+"\' class='grid grid-cols-2'>\
+        <div><img src='"+ image + "' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
+        <div class='grid grid-cols-1'><strong>"+ username + "<button class=\"delete\" data-id=\'"+message_id+"\')\">X</button></strong>  <span>" + text + "</span></div>\
+    </div></br>";
+}
 
     /**
      * Parse each of the messages recieved
      * @param {*} messages 
      */
-    streamMessages(messages) {
+    streamMessages(messages, user_id) {
         if (messages.length > 0) {
             for (var i in messages) {
-                this.parseMessage(messages[i].username, messages[i].picture, messages[i].text)
+                if (messages[i].user_id == user_id)
+                    this.parseOwnedMessage(messages[i].username, messages[i].picture, messages[i].text, messages[i]._id)
+                else 
+                    this.parseMessage(messages[i].username, messages[i].picture, messages[i].text, messages[i]._id)
             }
         }
     }

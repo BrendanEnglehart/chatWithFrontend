@@ -17,18 +17,19 @@ let topic_cache = []
 let user_list = {}
 let topic_type = "nothing"
 let topic_id = ""
+
+let current_user_id= ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
-function parseMessage(username, image, text) {
+function parseMessage(username, image, text, user_id) {
     if (topic_type == "drawing") {
         if (JSON.parse(text)[0]!== undefined)
             drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
     }
     if (topic_type == "chat" || topic_type == "general") {
-        chatFeed.parseMessage(username, image, text)
+        chatFeed.parseMessage(username, image, text, user_id)
     }
 }
-
 async function getUser(user_id){
     if (!Object.values(user_list).includes(user_id) || user_list[user_id] == undefined){
         await fetch("/users").then(response => response.json()).then(data => {
@@ -51,11 +52,29 @@ socket.on('message', async (data) => {
     parseMessage(user.username, user.picture, data.text)
 });
 
+async function deleteMessage(message_id){
+    deleteMessageElement(message_id)
+    await fetch("/delete_message", {
+        method: 'POST', // Specify the method as POST
+        headers: {
+            'Content-Type': 'application/json', // Indicate that the body is JSON
+            'Accept': 'application/json', // Specify the expected response type
+        },
+        body: JSON.stringify({ message_id: message_id })
+    })
+}
+
 // This should be called load Topic, or something smarter, right now it's not that great
 async function switchTopic(nextTopic) {
     topic_id = nextTopic["_id"]
     topic_type = nextTopic["type"]
     chatFeed.clear()
+
+    if (current_user_id == ""){
+        await fetch("/current_user").then(response=>response.json()).then(data => {
+            current_user_id = data.user_id;
+        })
+    }
     if (topic_type == "drawing") {
         // Starting canvas for the initial drawing app
         chatFeed.repurposeFeedForDrawing()
@@ -86,7 +105,7 @@ async function switchTopic(nextTopic) {
                     }
                 }
                 if (messages) {
-                    chatFeed.streamMessages(messages)
+                    chatFeed.streamMessages(messages, current_user_id)
                 }
                 socket.emit("join", nextTopic["_id"])
             })
@@ -354,7 +373,12 @@ newCategorySubmit.addEventListener('click', async () => {
 
 
 const chatFeed = new ChatFeed(document.getElementById("chatFeed"))
-
+document.getElementById("chatFeed").addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete')) {
+            const message_id = event.target.dataset.id;
+            deleteMessage(message_id);
+        }
+    });
 async function loadSelf() {
     loadCategory()
     await fetch("/load_self").then(response => response.json()).then(data => {
@@ -372,4 +396,10 @@ document.onkeydown=function(e){
         socket.send(topic_id, messageText.value)
         messageText.value = ""
     }
+}
+
+function deleteMessageElement(message_id){
+    let message = document.getElementById(message_id)
+    message.innerHTML=""
+    message.hidden="True"
 }
