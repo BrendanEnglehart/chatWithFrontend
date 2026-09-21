@@ -122,6 +122,22 @@ def handle_delete(data):
         timeout=app.config["DEFAULT_TIMEOUT"],
     ).content
 
+@socketio.on("edit_message")
+def handle_edit(data):
+    """Socket Handler for message deletion"""
+    if app.config["DEVELOPMENT_MODE"]:
+        return {}
+
+    room = session.get("topic")["_id"]
+    app.logger.error(data)
+    emit("edit", data, json=True, to=room, include_self=False)
+    return external_requests.post(
+        app.config["API_ENDPOINT"] + "/message/edit/message",
+        json={ "text": data['text'], "_id": data['message_id'], "user_id": session.get("user_id")},
+        timeout=app.config["DEFAULT_TIMEOUT"],
+    ).content
+
+
 
 @app.route("/sendMessage", methods=["POST"])
 def send_message():

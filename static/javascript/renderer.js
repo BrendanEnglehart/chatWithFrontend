@@ -59,9 +59,18 @@ socket.on('delete_message', (data) => {
     deleteMessageElement(data)
 })
 
+socket.on('edit_message', (data) => {
+    editMessageElement(data.message_id, data.text)
+})
+
 async function deleteMessage(message_id){
     deleteMessageElement(message_id)
     socket.emit('delete_message', message_id)
+}
+
+async function editMessage(message_id, text){
+    editMessageElement(message_id, text)
+    socket.emit('edit_message', {"message_id" : message_id, "text" : text})
 }
 
 // This should be called load Topic, or something smarter, right now it's not that great
@@ -378,6 +387,21 @@ document.getElementById("chatFeed").addEventListener('click', function(event) {
             const message_id = event.target.dataset.id;
             deleteMessage(message_id);
         }
+        if (event.target.classList.contains('edit')) {
+            const message_id = event.target.dataset.id;
+            event.target.hidden = "editing"
+            document.getElementById("text-"+message_id).hidden = "updating"
+            document.getElementById("update-text-"+message_id).hidden = undefined
+            document.getElementById("update-text-"+message_id+"-submit").hidden = undefined
+        }
+        if (event.target.classList.contains('update')) {
+            const message_id = event.target.dataset.id;
+            document.getElementById("update-text-"+message_id).hidden = "edit"
+            document.getElementById("update-text-"+message_id+"-submit").hidden = "edit"
+            document.getElementById("text-"+message_id).hidden = undefined
+            document.getElementById("edit-"+message_id).hidden = undefined
+            editMessage(message_id, document.getElementById("update-text-"+message_id).value)
+        }
     });
 async function loadSelf() {
     loadCategory()
@@ -402,4 +426,9 @@ function deleteMessageElement(message_id){
     let message = document.getElementById(message_id)
     message.innerHTML=""
     message.hidden="True"
+}
+
+function editMessageElement(message_id, text){
+    let message = document.getElementById("text-"+message_id)
+    message.innerHTML=text
 }
