@@ -21,13 +21,16 @@ let topic_id = ""
 let current_user_id= ""
 // We are all brendan on this blessed day
 const default_image = "https://lh3.googleusercontent.com/a/ACg8ocJZ7j2OPKQR9bv0eP5lchq80qpKKpA_GQzbWARM5CF29Xdh-OF-zQ=s96-c"
-function parseMessage(username, image, text, user_id) {
+function parseMessage(username, image, text, user_id, message_id) {
     if (topic_type == "drawing") {
         if (JSON.parse(text)[0]!== undefined)
             drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
     }
     if (topic_type == "chat" || topic_type == "general") {
-        chatFeed.parseMessage(username, image, text, user_id)
+        if (user_id == current_user_id)
+            chatFeed.parseOwnedMessage(username, image, text, message_id)
+        else
+            chatFeed.parseMessage(username, image, text, message_id)
     }
 }
 async function getUser(user_id){
@@ -49,19 +52,16 @@ async function getUser(user_id){
 socket.on('message', async (data) => {
     await getUser(data.user_id)
     let user =user_list[data.user_id]
-    parseMessage(user.username, user.picture, data.text)
+    parseMessage(user.username, user.picture, data.text, data.user_id, data._id)
 });
+
+socket.on('delete_message', (data) => {
+    deleteMessageElement(data)
+})
 
 async function deleteMessage(message_id){
     deleteMessageElement(message_id)
-    await fetch("/delete_message", {
-        method: 'POST', // Specify the method as POST
-        headers: {
-            'Content-Type': 'application/json', // Indicate that the body is JSON
-            'Accept': 'application/json', // Specify the expected response type
-        },
-        body: JSON.stringify({ message_id: message_id })
-    })
+    socket.emit('delete_message', message_id)
 }
 
 // This should be called load Topic, or something smarter, right now it's not that great

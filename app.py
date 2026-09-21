@@ -99,11 +99,28 @@ def handle_message(room, data):
         },
         timeout=app.config["DEFAULT_TIMEOUT"],
     )
-    emit("message", message, json=True, to=room, include_self=True)
+    app.logger.error(ret.content)
+    emit("message", json.loads(ret.content), json=True, to=room, include_self=True)
     if ret.ok:
-        pass
+        return ret.content
     else:
         app.logger.error(ret.raise_for_status())
+
+
+@socketio.on("delete_message")
+def handle_delete(data):
+    """Socket Handler for message deletion"""
+    if app.config["DEVELOPMENT_MODE"]:
+        return {}
+
+    room = session.get("topic")["_id"]
+
+    emit("delete_message", data, json=True, to=room, include_self=False)
+    return external_requests.post(
+        app.config["API_ENDPOINT"] + "/message/delete/message",
+        json={"_id": data, "user_id": session.get("user_id")},
+        timeout=app.config["DEFAULT_TIMEOUT"],
+    ).content
 
 
 @app.route("/sendMessage", methods=["POST"])
@@ -211,8 +228,6 @@ def logout():
             quote_via=quote_plus,
         )
     )
-
-
 
 
 @socketio.on("join")
