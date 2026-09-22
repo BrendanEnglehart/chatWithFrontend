@@ -15,7 +15,7 @@
         
         {% if session %}
             <div id="mainBody">
-                <div class="grid grid-cols-3">
+                <div class="grid grid-cols-6">
                     
                     <div id="left" class="left grid h-full col-span-1" style="width: 10dvw;">
                         <div id="Topics" style="height:250px;overflow-y:auto">
@@ -50,7 +50,7 @@
                         </div>
                     </div>
 
-                    <div id="middle" class="col-span-4"  style="width:75dvw;">
+                    <div id="middle" class="col-span-4"  >
                         <div id="color-picker-area" hidden>
                             Color: <input id="color-picker" type="color" value="#00FF00">
                             <button id="make_fullscreen">Fullscreen</button>
@@ -68,18 +68,18 @@
                              style="height:80dvh; overflow-y:auto">
                         </div>
 
-                        <div id="newMessageArea" class="p-4  dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
-                        <div class="relative flex items-end gap-2  dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-2 focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
-                            <textarea id="newMessage" rows="1" 
-                                      class="flex-1 bg-transparent border-none focus:ring-0 resize-none py-2 px-3 text-sm" 
-                                      placeholder="Message #channel..."></textarea>
+                        <div id="newMessageArea" class="message-area p-4  dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+                            <div class="relative flex items-end gap-2  dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-2 focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+                                <textarea id="newMessage" rows="1" 
+                                        class="flex-1 bg-transparent border-none focus:ring-0 resize-none py-2 px-3 text-sm" 
+                                        placeholder="Message #channel..."></textarea>
 
-                        <button id="sendMessage"
-                            class="bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700 transition">
-                            Send
-                        </button>
+                            <button id="sendMessage"
+                                class="bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700 transition">
+                                Send
+                            </button>
+                            </div>
                         </div>
-                    </div>
                     </div>
 
                     <aside id="right-sidebar" class="col-span-1 lg:col-span-1">

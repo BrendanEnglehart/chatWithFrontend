@@ -80,13 +80,13 @@ export class ChatFeed {
  * @returns 
  */
     chatHTML(username, image, text, message_id) {
-        return "<div id=\'"+message_id+"\' class='grid grid-cols-2'>\
+        return "<div id=\'"+message_id+"\' class='chat-message grid grid-cols-2'>\
           <div><img src='"+ image + "' style='height: 32px;' class='w-12, h-12 object-contain'/></div>\
           <div class='grid grid-cols-1'><strong>"+ username + "</strong> <span>" + text + "</span></div>\
-        </div></br>";
+        </div>";
     }
     ownedChatHTML(username, image, text, message_id) {
-    return "<div id=\'"+message_id+"\' class='grid grid-cols-2'>\
+    return "<div id=\'"+message_id+"\' class='chat-message grid grid-cols-2'>\
         <div>\
         <img src='"+ image + "' style='height: 32px;'\
          class='w-12, h-12 object-contain'/>\
@@ -101,7 +101,7 @@ export class ChatFeed {
                   <button id=\"update-text-"+message_id+"-submit\" hidden=\"update_send\" class=\"update\" data-id=\'"+message_id+"\')\"> Update</button>\
         </strong>\
         </div>\
-    </div></br>";
+    </div>";
 }
 
     /**
