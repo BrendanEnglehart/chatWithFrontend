@@ -9,6 +9,8 @@ const mainTab = document.getElementById("mainBody")
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
 const newMessageArea = document.getElementById('newMessageArea')
+const loadMoreMessagesArea = document.getElementById('moreMessages')
+const loadMoreMessagesButton = document.getElementById('addMoreMessages')
 const socket = io()
 let drawing;
 let isDrawing = false
@@ -100,7 +102,7 @@ async function switchTopic(nextTopic) {
             })
     }
     else if (topic_type == "chat" || topic_type == "general") {
-        await fetch("/stream").then(response => response.json())
+        await fetch("/feed").then(response => response.json())
             .then(async data => {
                 newMessageArea.hidden = undefined
                 let messages = data.messages
@@ -115,6 +117,9 @@ async function switchTopic(nextTopic) {
                 }
                 if (messages) {
                     chatFeed.streamMessages(messages, current_user_id)
+                }
+                if (messages.length >= chatFeed.getFeedSize()){
+                    loadMoreMessagesArea.hidden = undefined
                 }
                 socket.emit("join", nextTopic["_id"])
             })
@@ -358,6 +363,32 @@ addCategoryButton.onclick = function () {
         document.getElementById('newCategoryForm').hidden = true
         addCategoryButton.textContent = "+"
     }
+}
+
+loadMoreMessagesButton.onclick = async function () {
+    loadMoreMessagesArea.hidden = "hidden"
+    await fetch("/feed").then(response => response.json())
+            .then(async data => {
+                newMessageArea.hidden = undefined
+                console.log(data)
+                let messages = data.messages
+                for (let message in messages) { 
+                    let user =  await getUser(messages[message].user_id)
+                    user = user_list[messages[message].user_id]
+                    if (user != null){ // Deleting a user doesn't delete any of their messages
+                        messages[message].username=user.username
+                        messages[message].picture=user.picture
+                    }
+                }
+                if (messages) {
+                    chatFeed.loadOlderMessages(messages, current_user_id)
+                }
+                if (messages.length >= chatFeed.getFeedSize()){
+                    loadMoreMessagesArea.hidden = undefined
+                }
+
+            })
+            .catch(error => { console.log(error) })
 }
 
 newCategorySubmit.addEventListener('click', async () => {

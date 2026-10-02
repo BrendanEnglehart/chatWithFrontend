@@ -21,10 +21,11 @@ def get_categories():
     )
     return ret.content
 
+
 @BasicBlueprint.route("/current_user", methods=["get"])
 def get_current_user_id():
     """Retrieve the current user id if available"""
-    return { "user_id" : session.get("user_id")}
+    return {"user_id": session.get("user_id")}
 
 
 @BasicBlueprint.route("/restream", methods=["get"])
@@ -86,6 +87,7 @@ def new_category():
         timeout=app.config["DEFAULT_TIMEOUT"],
     ).content
 
+
 @BasicBlueprint.route("/delete_message", methods=["post"])
 def delete_message():
     """delete message"""
@@ -108,6 +110,8 @@ def switch_topic():
     session["topic"] = topic
     session.update()
     session["stream_latest"] = datetime.datetime.min
+    if "stream_earliest" in session:
+        del session["stream_earliest"]
     session.update()
     return {"text": 200}
 
@@ -168,6 +172,53 @@ def switch_category():
     session.update()
     return {"text": 200}
 
+
+@BasicBlueprint.route("/new_feed", methods=["get"])
+def new_feed():
+    """Reset the session["stream_earliest"] to be datetime.datetime.min"""
+    if "stream_earliest" in session:
+        del session["stream_earliest"]
+    session.update()
+    return {"text": 200}
+
+
+@BasicBlueprint.route("/feed", methods=["get"])
+def feed():
+    """Acquire the chat feed"""
+    if app.config["DEVELOPMENT_MODE"]:
+        app.config["DEV_MODE_CHAT_STACK"] = []
+        return {"messages": app.config["DEV_MODE_CHAT_STACK"]}
+
+    topic = session.get("topic")
+
+    if topic is None or topic == "":
+        topic = external_requests.get(
+            app.config["API_ENDPOINT"] + "/landing/generalLanding",
+            timeout=app.config["DEFAULT_TIMEOUT"],
+        ).json()
+        session["topic"] = topic
+        session["category"] = topic["category_id"]
+
+    time = session.get("stream_earliest", datetime.datetime.now())
+
+    args = f"/message/feed/topic={topic['_id']}&time={time}&size=100"
+    ret = external_requests.get(
+        app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"]
+    )
+    if not ret.ok:
+        app.logger.error(ret.raise_for_status())
+    # Messages are guaranteed to be in time order
+    # now is set for the stream so ChatWith won't double load a message
+    # Otherwise we would reset the value
+    session["stream_earliest"] = (
+        datetime.datetime.fromisoformat(ret.json()["messages"][0]["time"])
+        if len(ret.json()["messages"]) > 0
+        else datetime.datetime.now()
+    )
+    session.update()
+    return ret.content
+
+
 # Deprecate me
 @BasicBlueprint.route("/stream", methods=["get"])
 def stream():
@@ -180,7 +231,8 @@ def stream():
 
     if topic is None or topic == "":
         topic = external_requests.get(
-            app.config["API_ENDPOINT"] + "/landing/generalLanding", timeout=app.config["DEFAULT_TIMEOUT"]
+            app.config["API_ENDPOINT"] + "/landing/generalLanding",
+            timeout=app.config["DEFAULT_TIMEOUT"],
         ).json()
         session["topic"] = topic
         session["category"] = topic["category_id"]
@@ -191,10 +243,10 @@ def stream():
     session["stream_latest"] = datetime.datetime.now()
     session.update()
     args = f"/message/stream/topic={topic['_id']}&time={time}"
-    ret = external_requests.get(app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"])
-    if ret.ok:
-        pass # Changing out print message
-    else:
+    ret = external_requests.get(
+        app.config["API_ENDPOINT"] + args, timeout=app.config["DEFAULT_TIMEOUT"]
+    )
+    if not ret.ok:
         app.logger.error(ret.raise_for_status())
 
     return ret.content

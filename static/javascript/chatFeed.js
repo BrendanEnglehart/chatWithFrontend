@@ -8,8 +8,14 @@ Clearing the feed should reset it from any additional configurations
 */
 export class ChatFeed {
     chat;
+    feedSize;
     constructor(chat) {
         this.chat = chat;
+        this.feedSize = 100;
+    }
+
+    getFeedSize() { 
+        return this.feedSize;
     }
 
     /**
@@ -19,7 +25,7 @@ export class ChatFeed {
      *  
      */
     repurposeFeed(newFeed) {
-        this.chat.innerHTML = newFeed
+        this.chat.innerHTML = newFeed;
     }
 
 
@@ -41,7 +47,6 @@ export class ChatFeed {
     parseMessage(username, image, text, message_id) {
         this.chat.innerHTML += this.chatHTML(username, image, text, message_id)
     }
-
 
 
     /**
@@ -117,5 +122,16 @@ export class ChatFeed {
                     this.parseMessage(messages[i].username, messages[i].picture, messages[i].text, messages[i]._id)
             }
         }
+    }
+
+    loadOlderMessages(messages, user_id) { 
+        let oldFeed = ""
+        for (var i in messages) {
+                if (messages[i].user_id == user_id)
+                    oldFeed += this.ownedChatHTML(messages[i].username, messages[i].picture, messages[i].text, messages[i]._id)
+                else 
+                    oldFeed += this.chatHTML(messages[i].username, messages[i].picture, messages[i].text, messages[i]._id)
+            }
+        this.chat.innerHTML= oldFeed + this.chat.innerHTML
     }
 }

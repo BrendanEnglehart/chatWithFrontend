@@ -81,14 +81,7 @@ def handle_message(room, data):
     user_id = session.get("user_id")
     if room == "":
         room = session.get("topic")["_id"]
-    message = (
-        {
-            "user_id": user_id,
-            "picture": session.get("user")["userinfo"]["picture"],
-            "topic": room,
-            "text": text,
-        },
-    )
+
     ret = external_requests.post(
         app.config["API_ENDPOINT"] + "/message/" + room,
         json={
@@ -148,7 +141,8 @@ def send_message():
         app.config["DEV_MODE_CHAT_STACK"].append(
             {
                 "user_id": "test",
-                "picture": "https://s.gravatar.com/avatar/a36cdd3b39f985b18b729fbe84863cae?s=480&amp;r=pg&amp;d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbr.png",
+                "picture":
+                  "https://s.gravatar.com/avatar/a.png",
                 "topic": "general",
                 "text": text,
             }
@@ -187,12 +181,14 @@ def home():
     """Base Route"""
     if not app.config["DEVELOPMENT_MODE"]:
         session["stream_latest"] = datetime.datetime.min
+        if "stream_earliest" in session:
+            del session["stream_earliest"]
         return render_template(
             "index.html",
             session=session.get("user"),
             pretty=json.dumps(session.get("user"), indent=4),
         )
-    render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
+    return render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
 
 
 @app.route("/login")
