@@ -16,7 +16,7 @@ AUTH0_CLIENT_SECRET=secretvalue
 ```
 3. in your `.env` file set `API_ENDPOINT` to your API endpoint location, it should look something like, note that this one needs to be in quotes ""
 ```
-API_ENDPOINT="http://127.0.0.1:5001"
+API_ENDPOINT="$ENDPOINT:5001"
 ```
 ## Running on a VM or BareMetal
 Run `gunicorn --bind 0.0.0.0:$PORT app:gunicorn` replacing the $PORT with your port number
