@@ -18,15 +18,14 @@ LANDING_PAGE = "default_landing.html"
 app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["DEVELOPMENT_MODE"] = False
-
 app.config["DEFAULT_TIMEOUT"] = (
     15  # default timeout for server requests. Most requests are less than a second.
 )
 app.register_blueprint(BasicBlueprint)
 oauth = OAuth(app)
 socketio = SocketIO()
-
 app.config["API_ENDPOINT"] = "http://127.0.0.1:5001"
+
 if ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
@@ -41,6 +40,8 @@ if ENV_FILE:
             raise ImportError("Failed to import Custom Routes") from exc
     if env.get("USER_EDIT_ENABLED"):
         app.config["USER_EDIT_ENABLED"] = True
+    else:
+        app.config["USER_EDIT_ENABLED"] = False
 
     oauth.register(
         "auth0",
