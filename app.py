@@ -18,6 +18,7 @@ LANDING_PAGE = "default_landing.html"
 app = Flask(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["DEVELOPMENT_MODE"] = False
+
 app.config["DEFAULT_TIMEOUT"] = (
     15  # default timeout for server requests. Most requests are less than a second.
 )
@@ -35,10 +36,11 @@ if ENV_FILE:
     if env.get("CUSTOM_ROUTES"):
         try:
             from custom_routes.custom_routes import CustomBlueprint
-
             app.register_blueprint(CustomBlueprint)
         except ImportError as exc:
             raise ImportError("Failed to import Custom Routes") from exc
+    if env.get("USER_EDIT_ENABLED"):
+        app.config["USER_EDIT_ENABLED"] = True
 
     oauth.register(
         "auth0",
@@ -187,6 +189,7 @@ def home():
             "index.html",
             session=session.get("user"),
             pretty=json.dumps(session.get("user"), indent=4),
+            user_edit_enabled=app.config["USER_EDIT_ENABLED"]
         )
     return render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
 

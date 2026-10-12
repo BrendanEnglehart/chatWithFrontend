@@ -280,17 +280,18 @@ newTopicSubmit.addEventListener('click', async () => {
 })
 const showUserPanelButton = document.getElementById('showUserPanelButton')
 const hideUserPanelButton = document.getElementById('hideUserPanelButton')
-showUserPanelButton.onclick = function() { 
-    document.getElementById('userEdit').hidden = undefined;
-    document.getElementById('showUserPanel').hidden = "hidden";
-    
-}
+if (hideUserPanelButton && showUserPanelButton){
+    showUserPanelButton.onclick = function() { 
+        document.getElementById('userEdit').hidden = undefined;
+        document.getElementById('showUserPanel').hidden = "hidden";
+        
+    }
 
-hideUserPanelButton.onclick = function() { 
-    document.getElementById('showUserPanel').hidden = undefined;
-    document.getElementById('userEdit').hidden = "hidden";
+    hideUserPanelButton.onclick = function() { 
+        document.getElementById('showUserPanel').hidden = undefined;
+        document.getElementById('userEdit').hidden = "hidden";
+    }
 }
-
 const makeFullscreenButton = document.getElementById('make_fullscreen')
 const unmakeFullscreenButton = document.getElementById('unmake_fullscreen')
 
@@ -334,23 +335,24 @@ unmakeFullscreenButton.onclick = async function () {
 
 
 const userDataUpdateButton = document.getElementById('updateUserDataButton')
-userDataUpdateButton.onclick = async function () {
-    displayName = document.getElementById('displayName').value;
-    await fetch("/update_username", {
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json', 
-            'Accept': 'application/json', 
-        },
-        body: JSON.stringify({ userName: displayName })
-    }).then()
-        .then(data => {
-            document.getElementById('displayName').value = ""
-        }
-        )
-
+if (userDataUpdateButton)
+{
+    userDataUpdateButton.onclick = async function () {
+        displayName = document.getElementById('displayName').value;
+        await fetch("/update_username", {
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+            },
+            body: JSON.stringify({ userName: displayName })
+        }).then()
+            .then(data => {
+                document.getElementById('displayName').value = ""
+            }
+            )
+    }
 }
-
 const addCategoryButton = document.getElementById('addCategory')
 const newCategorySubmit = document.getElementById('newCategorySubmit')
 const newCategoryName = document.getElementById('newCategoryName')
