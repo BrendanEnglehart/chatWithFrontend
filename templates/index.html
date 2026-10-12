@@ -87,6 +87,7 @@
 
                     <aside id="right-sidebar" class="col-span-1 lg:col-span-1">
                     <div class=" dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 h-full">
+                        {% if user_edit_enabled %}
                         <div id="userEdit" hidden>
                             <div class="flex items-center justify-between mb-6">
                                 <h2 class="font-bold text-lg border-8">Settings</h2>
@@ -111,6 +112,7 @@
                             </div>
                             <button id="showUserPanelButton" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">Edit Profile</button>
                         </div>
+                        {% endif %}
                     </div>
                 </aside>    
 

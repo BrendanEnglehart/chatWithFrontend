@@ -24,8 +24,8 @@ app.config["DEFAULT_TIMEOUT"] = (
 app.register_blueprint(BasicBlueprint)
 oauth = OAuth(app)
 socketio = SocketIO()
-
 app.config["API_ENDPOINT"] = "http://127.0.0.1:5001"
+
 if ENV_FILE:
     load_dotenv(ENV_FILE)
     app.secret_key = env.get("APP_SECRET_KEY")
@@ -35,10 +35,13 @@ if ENV_FILE:
     if env.get("CUSTOM_ROUTES"):
         try:
             from custom_routes.custom_routes import CustomBlueprint
-
             app.register_blueprint(CustomBlueprint)
         except ImportError as exc:
             raise ImportError("Failed to import Custom Routes") from exc
+    if env.get("USER_EDIT_ENABLED"):
+        app.config["USER_EDIT_ENABLED"] = True
+    else:
+        app.config["USER_EDIT_ENABLED"] = False
 
     oauth.register(
         "auth0",
@@ -187,6 +190,7 @@ def home():
             "index.html",
             session=session.get("user"),
             pretty=json.dumps(session.get("user"), indent=4),
+            user_edit_enabled=app.config["USER_EDIT_ENABLED"]
         )
     return render_template("index.html", session=app.config["DEVELOPMENT_MODE"])
 
