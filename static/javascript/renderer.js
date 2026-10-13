@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 const mainTab = document.getElementById("mainBody")
 const categoryList = document.getElementById("Category-List")
 const topicList = document.getElementById("Topic-List")
+const userList = document.getElementById("User-List")
 const newMessageArea = document.getElementById('newMessageArea')
 const loadMoreMessagesArea = document.getElementById('moreMessages')
 const loadMoreMessagesButton = document.getElementById('addMoreMessages')
@@ -39,14 +40,21 @@ async function getUser(user_id){
     if (!Object.values(user_list).includes(user_id) || user_list[user_id] == undefined){
         await fetch("/users").then(response => response.json()).then(data => {
             let users = data.users
+            userList.innerHTML = ""
             for (let user in users){
                 user_list[users[user]._id] = users[user]
+                let newButton = document.createElement("button")
+                let newUser = document.createElement("div")
+                newButton.name = JSON.stringify(users[user]._id).replaceAll('"', "'")
+                newButton.textContent = users[user].username
+                newUser.append(newButton)
+                userList.append(newUser)
             }
             return user_list[user_id]
         })
     }
     else {
-                   return user_list[user_id]
+        return user_list[user_id]
     }
 
 }
@@ -365,6 +373,20 @@ addCategoryButton.onclick = function () {
         document.getElementById('newCategoryForm').hidden = true
         addCategoryButton.textContent = "+"
     }
+}
+
+const userListButton = document.getElementById('userlistbutton')
+userListButton.onclick = function () {
+    document.getElementById('Users').hidden = undefined
+    document.getElementById('Topics').hidden = "userlist"
+    document.getElementById('Categories').hidden = "userlist"    
+}
+
+const hideUserListButton = document.getElementById('hideuserlistbutton')
+hideUserListButton.onclick = function () {
+    document.getElementById('Users').hidden = "userlist"
+    document.getElementById('Topics').hidden = undefined
+    document.getElementById('Categories').hidden = undefined
 }
 
 loadMoreMessagesButton.onclick = async function () {
