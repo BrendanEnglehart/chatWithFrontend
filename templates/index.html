@@ -18,6 +18,12 @@
                 <div class="grid grid-cols-6">
                     
                     <div id="left" class="left grid h-full col-span-1" style="width: 10dvw;">
+                        <div id="Users" hidden="true">
+                            <button id="hideuserlistbutton">Back to Chat</button>
+                            <div id="User-List">
+                                
+                            </div>
+                        </div>
                         <div id="Topics" style="height:250px;overflow-y:auto">
                             <h1>Topics <button id="addTopic">+</button></h1>
                             <div id="newTopicForm" hidden>
@@ -31,7 +37,11 @@
                                 </select>
                                 <button id="newTopicSubmit">Submit</button>
                             </div>
-                            <div id="Topic-List"></div>
+
+                            <div id="Topic-List">
+                                
+                            </div>
+                            
                         </div>
 
                         <div id="Categories" style="height:250px; overflow-y:auto">
@@ -41,7 +51,9 @@
                                 <input id="newCategoryName" type="text" class="bg-red-50">
                                 <button id="newCategorySubmit">Submit</button>
                             </div>
+                            <button id="userlistbutton">users</button>
                             <div id="Category-List"></div>
+
                         </div>
                         <div class="mt-auto">
                             <a href="/logout" class="block text-center py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">

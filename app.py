@@ -256,6 +256,17 @@ def on_join(topic_id):
     join_room(topic_id)
 
 
+@socketio.on('connect')
+def handle_connect():
+    """Connection to Socket event"""
+    print("Client connected")
+
+@socketio.on('disconnect')
+def handle_disconnect(reason):
+    """Disconnect from Socket Event"""
+    pass
+
+
 @socketio.on("joinSession")
 def on_join_session():
     """User Joins a topic"""
