@@ -394,7 +394,6 @@ loadMoreMessagesButton.onclick = async function () {
     await fetch("/feed").then(response => response.json())
             .then(async data => {
                 newMessageArea.hidden = undefined
-                console.log(data)
                 let messages = data.messages
                 for (let message in messages) { 
                     let user =  await getUser(messages[message].user_id)
@@ -467,7 +466,6 @@ async function loadSelf() {
 
 document.getElementById("User-List").addEventListener('click', async (event) => {
             const user_id = event.target.id; 
-            console.log(event.target)
             if (current_user_id == ""){
                 await fetch("/current_user").then(response=>response.json()).then(data => {
                     current_user_id = data.user_id;
@@ -478,7 +476,6 @@ document.getElementById("User-List").addEventListener('click', async (event) => 
             }   
             await fetch("/create_or_retrieve_private_chat?"+ new URLSearchParams(params).toString()).then(response=>response.json()).then(data => {
                 let topic = data;
-                console.log(topic)
                 fetch("/switch_topic", {
                     method: 'POST', // Specify the method as POST
                     headers: {

@@ -124,7 +124,6 @@ def handle_edit(data):
         return {}
 
     room = session.get("topic")["_id"]
-    app.logger.error(data)
     emit("edit", data, json=True, to=room, include_self=False)
     return external_requests.post(
         app.config["API_ENDPOINT"] + "/message/edit/message",
