@@ -95,7 +95,6 @@ def handle_message(room, data):
         },
         timeout=app.config["DEFAULT_TIMEOUT"],
     )
-    app.logger.error(ret.content)
     emit("message", json.loads(ret.content), json=True, to=room, include_self=True)
     if ret.ok:
         return ret.content

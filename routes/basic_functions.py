@@ -219,6 +219,18 @@ def feed():
     return ret.content
 
 
+@BasicBlueprint.route("/create_or_retrieve_private_chat", methods=["get"])
+def create_or_retrieve_private_chat():
+    """Create or Retrieve the Private Chat Topic, returns Topic or Error"""
+    users = request.args.get("users", default=[])
+    ret = external_requests.get(
+        url=app.config["API_ENDPOINT"] + "/private/create_or_retrieve_private_chat",
+        params={"users": users},
+        timeout=app.config["DEFAULT_TIMEOUT"],
+    )
+    return ret.content
+
+
 # Deprecate me
 @BasicBlueprint.route("/stream", methods=["get"])
 def stream():
