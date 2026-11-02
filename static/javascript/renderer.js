@@ -29,7 +29,7 @@ function parseMessage(username, image, text, user_id, message_id) {
         if (JSON.parse(text)[0]!== undefined)
             drawing.drawFeed(JSON.parse(text), JSON.parse(text)[0].color, JSON.parse(text)[0].width)
     }
-    if (topic_type == "chat" || topic_type == "general") {
+    if (topic_type == "chat" || topic_type == "general" || topic_type == "direct_message") {
         if (user_id == current_user_id)
             chatFeed.parseOwnedMessage(username, image, text, message_id)
         else
@@ -46,6 +46,7 @@ async function getUser(user_id){
                 let newButton = document.createElement("button")
                 let newUser = document.createElement("div")
                 newButton.name = JSON.stringify(users[user]._id).replaceAll('"', "'")
+                newButton.id = JSON.stringify(users[user]._id).replaceAll('"', "")
                 newButton.textContent = users[user].username
                 newUser.append(newButton)
                 userList.append(newUser)
@@ -109,7 +110,7 @@ async function switchTopic(nextTopic) {
 
             })
     }
-    else if (topic_type == "chat" || topic_type == "general") {
+    else  {
         await fetch("/feed").then(response => response.json())
             .then(async data => {
                 newMessageArea.hidden = undefined
@@ -133,8 +134,7 @@ async function switchTopic(nextTopic) {
             })
             .catch(error => { console.log(error) })
     }
-    else {
-    }
+
 }
 async function switchCategory(event) {
 
@@ -465,15 +465,56 @@ async function loadSelf() {
     })
 }
 
+document.getElementById("User-List").addEventListener('click', async (event) => {
+            const user_id = event.target.id; 
+            console.log(event.target)
+            if (current_user_id == ""){
+                await fetch("/current_user").then(response=>response.json()).then(data => {
+                    current_user_id = data.user_id;
+                })
+            } 
+            let params = {
+                users: [user_id, current_user_id]
+            }   
+            await fetch("/create_or_retrieve_private_chat?"+ new URLSearchParams(params).toString()).then(response=>response.json()).then(data => {
+                let topic = data;
+                console.log(topic)
+                fetch("/switch_topic", {
+                    method: 'POST', // Specify the method as POST
+                    headers: {
+                        'Content-Type': 'application/json', // Indicate that the body is JSON
+                        'Accept': 'application/json', // Specify the expected response type
+                    },
+                    body: JSON.stringify(topic)
+                     })
+                    .then(response => {
+
+                        if (!response.ok) {
+
+                        }
+                        return response.json()
+                    })
+                    .then(data => {
+                        switchTopic(topic)
+                    })
+                    .catch(error => {
+                        console.log(error)
+                    });
+               
+            })
+});
+
+
 
 loadSelf()
 
-document.onkeydown=function(e){
+newMessageArea.onkeydown=function(e){
     let keycode =  e ? (e.which ? e.which : evt.keyCode) : e.keyCode;
     if(topic_type != "drawing" && keycode == 13)
     {
         socket.send(topic_id, messageText.value)
         messageText.value = ""
+    
     }
 }
 
